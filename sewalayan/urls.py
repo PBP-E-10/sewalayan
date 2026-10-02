@@ -19,9 +19,12 @@ from django.urls import path
 from django.urls import path, include
 
 from item.urls import item
+from review.urls import review
+from order.urls import order
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('item/', include(item)),
-    
+    path('review/', include(review)),
+    path('order/', include(order))
 ]
