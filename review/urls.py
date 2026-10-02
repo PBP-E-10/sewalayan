@@ -1,8 +1,9 @@
 from django.urls import path
-from . import views
+from review.views import show_review
 
-app_name = 'review'
-
-urlpatterns = [
-    path('item/<int:item_id>/', views.item_reviews, name='item_reviews'),
-]
+review = (
+    [
+        path('', show_review, name="show"),
+    ],
+    'review',
+)
