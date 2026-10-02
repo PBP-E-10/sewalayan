@@ -1,9 +1,9 @@
 from django.urls import path
-from . import views
+from .views import profile_detail, show_user
 
-user = (
-    [
-        path('<int:user_id>/', views.profile_detail, name='profile_detail'),
-    ],
-    'user'
-)
+app_name = 'user'
+
+urlpatterns = [
+    path('<int:user_id>/', profile_detail, name='profile_detail'),
+    path('', show_user, name='show')
+]
