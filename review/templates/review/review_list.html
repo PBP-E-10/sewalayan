@@ -13,6 +13,14 @@
             <span>{{ review.rating }}/5</span>
             <p>{{ review.comment|default:"(tanpa komentar)" }}</p>
             <small>{{ review.created_at|date:"d M Y, H:i" }}</small>
+
+            {% if review.reviewer == request.user %}
+                <a href="{% url 'review:edit' review.id %}">Edit</a>
+                <form method="POST" action="{% url 'review:delete' review.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" onclick="return confirm('Hapus ulasan ini?')">Hapus</button>
+                </form>
+            {% endif %}
         </div>
         <hr>
     {% endfor %}
