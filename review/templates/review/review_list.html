@@ -4,27 +4,101 @@
 
 {% block content %}
 <h1>Ulasan Pengguna</h1>
-<a href="{% url 'review:create' %}">+ Tulis Ulasan</a>
 
-{% if reviews %}
-    {% for review in reviews %}
-        <div>
-            <strong>{{ review.reviewer.username|default:"Anonim" }}</strong>
-            <span>{{ review.rating }}/5</span>
-            <p>{{ review.comment|default:"(tanpa komentar)" }}</p>
-            <small>{{ review.created_at|date:"d M Y, H:i" }}</small>
-
-            {% if review.reviewer == request.user %}
-                <a href="{% url 'review:edit' review.id %}">Edit</a>
-                <form method="POST" action="{% url 'review:delete' review.id %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit" onclick="return confirm('Hapus ulasan ini?')">Hapus</button>
-                </form>
-            {% endif %}
-        </div>
-        <hr>
-    {% endfor %}
+{% if user.is_authenticated %}
+    <form id="review-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Kirim Ulasan</button>
+        <p id="form-message"></p>
+    </form>
 {% else %}
-    <p>Belum ada ulasan.</p>
+    <p><a href="/admin/login/?next={{ request.path }}">Login</a> untuk menulis ulasan.</p>
 {% endif %}
+
+<hr>
+<div id="review-list">Memuat ulasan...</div>
+
+<script>
+    const listEl = document.getElementById('review-list');
+    const formEl = document.getElementById('review-form');
+    const csrfToken = '{{ csrf_token }}';
+
+    async function loadReviews() {
+        const response = await fetch("{% url 'review:show_json' %}");
+        const reviews = await response.json();
+
+        listEl.innerHTML = '';
+        if (reviews.length === 0) {
+            listEl.textContent = 'Belum ada ulasan.';
+            return;
+        }
+
+        reviews.forEach((review) => {
+            const card = document.createElement('div');
+
+            const name = document.createElement('strong');
+            name.textContent = review.reviewer;
+
+            const rating = document.createElement('span');
+            rating.textContent = ` ${review.rating}/5`;
+
+            const comment = document.createElement('p');
+            comment.textContent = review.comment || '(tanpa komentar)';
+
+            const date = document.createElement('small');
+            date.textContent = new Date(review.created_at).toLocaleString('id-ID');
+
+            card.append(name, rating, comment, date);
+
+            if (review.is_owner) {
+                const editLink = document.createElement('a');
+                editLink.href = `/review/${review.id}/edit/`;
+                editLink.textContent = ' Edit ';
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Hapus';
+                deleteBtn.addEventListener('click', () => deleteReview(review.id));
+
+                card.append(editLink, deleteBtn);
+            }
+
+            card.append(document.createElement('hr'));
+            listEl.append(card);
+        });
+    }
+
+    async function deleteReview(id) {
+        if (!confirm('Hapus ulasan ini?')) return;
+
+        const response = await fetch(`/review/${id}/delete-ajax/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken },
+        });
+        if (response.ok) loadReviews();
+    }
+
+    if (formEl) {
+        formEl.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const message = document.getElementById('form-message');
+
+            const response = await fetch("{% url 'review:create_ajax' %}", {
+                method: 'POST',
+                body: new FormData(formEl),
+            });
+
+            if (response.ok) {
+                formEl.reset();
+                message.textContent = 'Ulasan berhasil dikirim!';
+                loadReviews();
+            } else {
+                const data = await response.json();
+                message.textContent = data.error || Object.values(data.errors).flat().join(' ');
+            }
+        });
+    }
+
+    loadReviews();
+</script>
 {% endblock %}
