@@ -1,0 +1,21 @@
+{% extends 'review/base_review.html' %}
+
+{% block title %}Ulasan | Sewalayan{% endblock %}
+
+{% block content %}
+<h1>Ulasan Pengguna</h1>
+
+{% if reviews %}
+    {% for review in reviews %}
+        <div>
+            <strong>{{ review.reviewer.username|default:"Anonim" }}</strong>
+            <span>{{ review.rating }}/5</span>
+            <p>{{ review.comment|default:"(tanpa komentar)" }}</p>
+            <small>{{ review.created_at|date:"d M Y, H:i" }}</small>
+        </div>
+        <hr>
+    {% endfor %}
+{% else %}
+    <p>Belum ada ulasan.</p>
+{% endif %}
+{% endblock %}
