@@ -1,0 +1,15 @@
+{% extends 'review/base_review.html' %}
+
+{% block title %}Tulis Ulasan | Sewalayan{% endblock %}
+
+{% block content %}
+<h1>Tulis Ulasan</h1>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Kirim Ulasan</button>
+</form>
+
+<a href="{% url 'review:show' %}">Kembali</a>
+{% endblock %}

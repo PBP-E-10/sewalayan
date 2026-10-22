@@ -4,6 +4,7 @@
 
 {% block content %}
 <h1>Ulasan Pengguna</h1>
+<a href="{% url 'review:create' %}">+ Tulis Ulasan</a>
 
 {% if reviews %}
     {% for review in reviews %}
