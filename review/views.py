@@ -7,13 +7,13 @@ from review.forms import ReviewForm
 
 def show_review(request):
     context = {
-        'form': ReviewForm(),
+        'form': ReviewForm(user=request.user),
     }
     return render(request, 'review/review_list.html', context)
 
 @login_required(login_url='/admin/login')
 def create_review(request):
-    form = ReviewForm(request.POST or None)
+    form = ReviewForm(request.POST or None, user=request.user)
 
     if request.method == "POST" and form.is_valid():
         review = form.save(commit=False)
@@ -29,7 +29,7 @@ def create_review(request):
 @login_required(login_url='/admin/login')
 def edit_review(request, id):
     review = get_object_or_404(Review, pk=id, reviewer=request.user)
-    form = ReviewForm(request.POST or None, instance=review)
+    form = ReviewForm(request.POST or None, instance=review, user=request.user)
 
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -49,11 +49,18 @@ def delete_review(request, id):
     return redirect('review:show')
 
 def show_review_json(request):
-    reviews = Review.objects.select_related('reviewer')
+    reviews = Review.objects.select_related('reviewer', 'item')
+
+    item_id = request.GET.get('item')
+    if item_id:
+        reviews = reviews.filter(item_id=item_id)
+
     data = [
         {
             'id': review.id,
             'reviewer': review.reviewer.username if review.reviewer else 'Anonim',
+            'item_id': review.item_id,
+            'item': review.item.name if review.item else '-',
             'rating': review.rating,
             'comment': review.comment,
             'created_at': review.created_at.isoformat(),
@@ -68,7 +75,7 @@ def create_review_ajax(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Kamu harus login dulu.'}, status=401)
 
-    form = ReviewForm(request.POST)
+    form = ReviewForm(request.POST, user=request.user)
     if not form.is_valid():
         return JsonResponse({'errors': form.errors}, status=400)
 

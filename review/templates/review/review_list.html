@@ -43,13 +43,16 @@
             const rating = document.createElement('span');
             rating.textContent = ` ${review.rating}/5`;
 
+            const item = document.createElement('p');
+            item.textContent = `Barang: ${review.item}`;
+
             const comment = document.createElement('p');
             comment.textContent = review.comment || '(tanpa komentar)';
 
             const date = document.createElement('small');
             date.textContent = new Date(review.created_at).toLocaleString('id-ID');
 
-            card.append(name, rating, comment, date);
+            card.append(name, rating, item, comment, date);
 
             if (review.is_owner) {
                 const editLink = document.createElement('a');

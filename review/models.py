@@ -10,6 +10,12 @@ class Review(models.Model):
         related_name='reviews_given', 
         null=True,
     )
+    item = models.ForeignKey(
+        'item.Item',
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        null=True,
+    )
     rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
     comment = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
