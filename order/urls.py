@@ -1,10 +1,8 @@
-
 from django.urls import path
 from order.views import show_order
 
-order = (
-    [
-        path('', show_order, name="show"),
-    ],
-    'order'
-)
+app_name = 'order'
+
+urlpatterns = [
+    path('', show_order, name="show"),
+]
