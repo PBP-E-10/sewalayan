@@ -1,28 +1,49 @@
-{% extends 'review/base_review.html' %}
+{% extends 'base.html' %}
 
-{% block title %}Ulasan | Sewalayan{% endblock %}
+{% block meta %}
+<title>Ulasan | Sewalayan</title>
+{% endblock %}
 
 {% block content %}
-<h1>Ulasan Pengguna</h1>
+<div class="stack stack--lg">
+    <section class="section">
+        <h1 class="section__title">Ulasan Pengguna</h1>
 
-{% if user.is_authenticated %}
-    <form id="review-form">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Kirim Ulasan</button>
-        <p id="form-message"></p>
-    </form>
-{% else %}
-    <p><a href="/admin/login/?next={{ request.path }}">Login</a> untuk menulis ulasan.</p>
-{% endif %}
+        {% if user.is_authenticated %}
+            <form id="review-form" class="card stack">
+                {% csrf_token %}
+                {% include 'review/_form_fields.html' %}
+                <div class="row">
+                    <button type="submit" class="btn btn--primary">Kirim Ulasan</button>
+                    <span id="form-message" class="text-sm text-muted"></span>
+                </div>
+            </form>
+        {% else %}
+            <div class="card">
+                <p><a href="/admin/login/?next={{ request.path }}">Login</a> untuk menulis ulasan.</p>
+            </div>
+        {% endif %}
+    </section>
 
-<hr>
-<div id="review-list">Memuat ulasan...</div>
+    <section class="section">
+        <h2 class="section__title">Semua Ulasan</h2>
+        <div id="review-list" class="grid">
+            <p class="text-muted">Memuat ulasan...</p>
+        </div>
+    </section>
+</div>
 
 <script>
     const listEl = document.getElementById('review-list');
     const formEl = document.getElementById('review-form');
     const csrfToken = '{{ csrf_token }}';
+
+    function makeEl(tag, className, text) {
+        const el = document.createElement(tag);
+        if (className) el.className = className;
+        if (text !== undefined) el.textContent = text;
+        return el;
+    }
 
     async function loadReviews() {
         const response = await fetch("{% url 'review:show_json' %}");
@@ -30,43 +51,39 @@
 
         listEl.innerHTML = '';
         if (reviews.length === 0) {
-            listEl.textContent = 'Belum ada ulasan.';
+            listEl.append(makeEl('p', 'text-muted', 'Belum ada ulasan.'));
             return;
         }
 
         reviews.forEach((review) => {
-            const card = document.createElement('div');
+            const card = makeEl('article', 'card stack stack--sm');
 
-            const name = document.createElement('strong');
-            name.textContent = review.reviewer;
+            const header = makeEl('div', 'row row--between');
+            header.append(
+                makeEl('strong', '', review.reviewer),
+                makeEl('span', '', '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)),
+            );
 
-            const rating = document.createElement('span');
-            rating.textContent = ` ${review.rating}/5`;
-
-            const item = document.createElement('p');
-            item.textContent = `Barang: ${review.item}`;
-
-            const comment = document.createElement('p');
-            comment.textContent = review.comment || '(tanpa komentar)';
-
-            const date = document.createElement('small');
-            date.textContent = new Date(review.created_at).toLocaleString('id-ID');
-
-            card.append(name, rating, item, comment, date);
+            card.append(
+                header,
+                makeEl('small', 'text-sm text-muted', `Barang: ${review.item}`),
+                makeEl('p', '', review.comment || '(tanpa komentar)'),
+                makeEl('small', 'text-sm text-muted', new Date(review.created_at).toLocaleString('id-ID')),
+            );
 
             if (review.is_owner) {
-                const editLink = document.createElement('a');
-                editLink.href = `/review/${review.id}/edit/`;
-                editLink.textContent = ' Edit ';
+                const actions = makeEl('div', 'row');
 
-                const deleteBtn = document.createElement('button');
-                deleteBtn.textContent = 'Hapus';
+                const editLink = makeEl('a', 'btn', 'Edit');
+                editLink.href = `/review/${review.id}/edit/`;
+
+                const deleteBtn = makeEl('button', 'btn', 'Hapus');
                 deleteBtn.addEventListener('click', () => deleteReview(review.id));
 
-                card.append(editLink, deleteBtn);
+                actions.append(editLink, deleteBtn);
+                card.append(actions);
             }
 
-            card.append(document.createElement('hr'));
             listEl.append(card);
         });
     }

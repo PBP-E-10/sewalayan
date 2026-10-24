@@ -1,34 +1,22 @@
-{% extends 'review/base_review.html' %}
+{% extends 'base.html' %}
 
-{% block titel %}
-    {% if is_edit %}
-        Edit Ulasan
-    {% else %}
-        Tulis Ulasan
-    {% endif %}
-    | Sewalayan
+{% block meta %}
+<title>{% if is_edit %}Edit Ulasan{% else %}Tulis Ulasan{% endif %} | Sewalayan</title>
 {% endblock %}
 
 {% block content %}
-<h1>
-    {% if is_edit %}
-        Edit Ulasan
-    {% else %}
-        Tulis ulasan
-    {% endif %}
-</h1>
+<section class="section">
+    <h1 class="section__title">{% if is_edit %}Edit Ulasan{% else %}Tulis Ulasan{% endif %}</h1>
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">
-        {% if is_edit %}
-            Simpan Perubahan
-        {% else %}
-            Kirim Ulasan
-        {% endif %}
-    </button>
-</form>
-
-<a href="{% url 'review:show' %}">Kembali</a>
+    <form method="POST" class="card stack">
+        {% csrf_token %}
+        {% include 'review/_form_fields.html' %}
+        <div class="row">
+            <button type="submit" class="btn btn--primary">
+                {% if is_edit %}Simpan Perubahan{% else %}Kirim Ulasan{% endif %}
+            </button>
+            <a href="{% url 'review:show' %}" class="btn">Batal</a>
+        </div>
+    </form>
+</section>
 {% endblock %}
