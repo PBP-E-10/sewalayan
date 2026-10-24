@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block meta %} {% endblock %}
+</head>
+
+<body class="layout">
+  <header class="header">
+    <div class="container row row--between">
+      <strong class="text-lg">Sewalayan</strong>
+      <nav class="row">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="layout__main">
+    <div class="container container-padding">
+        {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">© 2026 Sewalayan.</div>
+  </footer>
+</body>
+
+</html>

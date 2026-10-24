@@ -1,0 +1,295 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+:root {
+    --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.25rem;
+    --text-xl: 1.75rem;
+    --text-2xl: 2.5rem;
+    --leading: 1.5;
+
+    --space-1: 0.25rem;
+    --space-2: 0.5rem;
+    --space-3: 1rem;
+    --space-4: 1.5rem;
+    --space-5: 2.5rem;
+    --space-6: 4rem;
+
+    --bg: #EFEAE0;
+    --surface: #E4DECE;
+    --surface-alt: #332C1E;
+    --border: #E4DECE;
+    --muted: #8A8474;
+    --primary: #E3A72E;
+    --text: #2A2A1F;
+
+    --radius: 8px;
+
+    --container: 72rem;
+    --gutter: clamp(1rem, 4vw, 2.5rem);
+    --sidebar: 16rem;
+}
+
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    background: var(--surface-alt);
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading);
+    color: var(--text);
+    background: var(--bg);
+}
+
+h1,
+h2,
+h3,
+p {
+    margin: 0;
+}
+
+h1,
+h2,
+h3 {
+    line-height: 1.2;
+    font-weight: 700;
+}
+
+h1 {
+    font-size: clamp(var(--text-xl), 5vw, var(--text-2xl));
+}
+
+h2 {
+    font-size: var(--text-xl);
+}
+
+h3 {
+    font-size: var(--text-lg);
+}
+
+a {
+    color: inherit;
+}
+
+img,
+video {
+    display: block;
+    max-width: 100%;
+    height: auto;
+}
+
+
+.layout {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+.layout__main {
+    flex: 1;
+}
+
+.container {
+    width: min(100% - 2 * var(--gutter), var(--container));
+    margin-inline: auto;
+}
+
+.container--narrow {
+    --container: 45rem;
+}
+
+.container--wide {
+    --container: 90rem;
+}
+
+.header,
+.footer {
+    padding-block: var(--space-3);
+    background: var(--surface-alt);
+    color: var(--bg);
+}
+
+.footer {
+    font-size: var(--text-sm);
+}
+
+.container-padding {
+    padding-block: var(--space-5);
+}
+
+.section+.section {
+    margin-top: var(--space-6);
+}
+
+.section__title {
+    font-size: var(--text-xl);
+    color: var(--text);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--space-4);
+}
+
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: center;
+}
+
+.row--between {
+    justify-content: space-between;
+}
+
+.stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.stack--sm {
+    gap: var(--space-2);
+}
+
+.stack--lg {
+    gap: var(--space-5);
+}
+
+.grid {
+    --grid-min: 16rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(var(--grid-min), 100%), 1fr));
+    gap: var(--space-4);
+}
+
+.grid--sm {
+    --grid-min: 12rem;
+}
+
+.grid--lg {
+    --grid-min: 22rem;
+}
+
+.with-sidebar {
+    display: grid;
+    gap: var(--space-5);
+
+    @media (min-width: 48rem) {
+        grid-template-columns: var(--sidebar) minmax(0, 1fr);
+    }
+}
+
+.with-sidebar--right {
+    @media (min-width: 48rem) {
+        grid-template-columns: minmax(0, 1fr) var(--sidebar);
+    }
+}
+
+/* Untuk Artikel/Deskripsi */
+.prose {
+    max-width: 65ch;
+
+    &>*+* {
+        margin-top: var(--space-3);
+    }
+
+    &>*+h2,
+    &>*+h3 {
+        margin-top: var(--space-5);
+    }
+}
+
+
+.btn {
+    font: inherit;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+
+    &:hover {
+        border-color: var(--muted);
+    }
+}
+
+.btn--primary {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--text);
+
+    &:hover {
+        filter: brightness(1.1);
+    }
+}
+
+.input {
+    font: inherit;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+
+    &:focus {
+        outline: 2px solid var(--primary);
+        outline-offset: 1px;
+    }
+}
+
+.card {
+    padding: var(--space-4);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+
+    & h3 {
+        margin-bottom: var(--space-2);
+    }
+
+    & p {
+        color: var(--muted);
+    }
+}
+
+.nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+
+    & a {
+        text-decoration: none;
+    }
+
+    & a:hover {
+        text-decoration: underline;
+    }
+}
+
+
+/* =========================================================
+   UTILITIES
+   ========================================================= */
+.text-muted {
+    color: var(--muted);
+}
+
+.text-sm {
+    font-size: var(--text-sm);
+}
+
+.text-lg {
+    font-size: var(--text-lg);
+}
