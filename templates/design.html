@@ -6,77 +6,195 @@
 {% endblock %}
 
 {% block content %}
-<main class="page">
 
-    <section class="section">
-        <h2>Typography</h2>
+<section class="section">
+    <h2 class="section__title">Barang</h2>
+    <div class="with-sidebar">
+
+        <aside class="stack">
+            <h3>Filter</h3>
+            <div class="stack stack--sm">
+                <label for="q">Cari</label>
+                <input class="input" id="q" type="search" placeholder="Cari barang">
+            </div>
+            <div class="stack stack--sm">
+                <label for="category">Kategori</label>
+                <select class="input" id="category">
+                    <option>Semua</option>
+                    <option>Elektronik</option>
+                    <option>Busana</option>
+                    <option>Perkakas</option>
+                </select>
+            </div>
+            <div class="stack stack--sm">
+                <label for="sort">Urutkan</label>
+                <select class="input" id="sort">
+                    <option>Terbaru</option>
+                    <option>Harga: rendah ke tinggi</option>
+                    <option>Harga: tinggi ke rendah</option>
+                </select>
+            </div>
+            <div class="stack stack--sm">
+                <label for="max-price">Maksimum Harga</label>
+                <input class="input" id="max-price" type="number" placeholder="Rp">
+            </div>
+            <div class="row">
+                <button class="btn btn--primary">Terapkan</button>
+                <button class="btn">Reset</button>
+            </div>
+        </aside>
+
         <div class="stack">
-            <p style="font-size: var(--text-2xl); font-weight: 700; line-height: 1.2;">Heading 2xl</p>
-            <p style="font-size: var(--text-xl); font-weight: 600;">Heading xl</p>
-            <p style="font-size: var(--text-lg); font-weight: 600;">Heading lg</p>
-            <p>Body text. The quick brown fox jumps over the lazy dog. Sphinx of black quarts, judge my vow.
-                If you're happy and you know it clap your hands.</p>
-            <p style="font-size: var(--text-sm); color: var(--muted);">Small / muted text</p>
-        </div>
-    </section>
+            <p class="text-muted text-sm">24 hasil</p>
 
-    <section class="section">
-        <h2>Colors</h2>
-        <div class="row">
-            <div class="swatch"><i style="background: var(--bg)"></i><span>bg</span></div>
-            <div class="swatch"><i style="background: var(--surface)"></i><span>surface</span></div>
-            <div class="swatch"><i style="background: var(--text)"></i><span>text</span></div>
-            <div class="swatch"><i style="background: var(--muted)"></i><span>muted</span></div>
-            <div class="swatch"><i style="background: var(--border)"></i><span>border</span></div>
-            <div class="swatch"><i style="background: var(--primary)"></i><span>primary</span></div>
-        </div>
-    </section>
-
-    <section class="section">
-        <h2>Spacing</h2>
-        <div class="stack" style="gap: var(--space-2);">
-            <div class="space-row"><b>space-1</b>
-                <div class="space-bar" style="width: var(--space-1)"></div>
-            </div>
-            <div class="space-row"><b>space-2</b>
-                <div class="space-bar" style="width: var(--space-2)"></div>
-            </div>
-            <div class="space-row"><b>space-3</b>
-                <div class="space-bar" style="width: var(--space-3)"></div>
-            </div>
-            <div class="space-row"><b>space-4</b>
-                <div class="space-bar" style="width: var(--space-4)"></div>
-            </div>
-            <div class="space-row"><b>space-5</b>
-                <div class="space-bar" style="width: var(--space-5)"></div>
-            </div>
-            <div class="space-row"><b>space-6</b>
-                <div class="space-bar" style="width: var(--space-6)"></div>
+            <div class="grid">
+                <article class="card stack stack--sm">
+                    <h3>Kamera Jadul</h3>
+                    <p>Blablabla</p>
+                    <strong>Rp50k/Hari</strong>
+                    <div class="row">
+                        <button class="btn btn--primary">Sewa</button>
+                        <button class="btn">Lihat</button>
+                    </div>
+                </article>
+                <article class="card stack stack--sm">
+                    <h3>Drum Elektrik</h3>
+                    <p>Blablabla</p>
+                    <strong>Rp100k/Hari</strong>
+                    <div class="row">
+                        <button class="btn btn--primary">Sewa</button>
+                        <button class="btn">Lihat</button>
+                    </div>
+                </article>
+                <article class="card stack stack--sm">
+                    <h3>PS3</h3>
+                    <p>Blablabla</p>
+                    <strong>Rp40k/Hari</strong>
+                    <div class="row">
+                        <button class="btn btn--primary">Sewa</button>
+                        <button class="btn">Lihat</button>
+                    </div>
+                </article>
+                <article class="card stack stack--sm">
+                    <h3>Wok</h3>
+                    <p>Blablabla</p>
+                    <strong>Rp10k/Hari</strong>
+                    <div class="row">
+                        <button class="btn btn--primary">Sewa</button>
+                        <button class="btn">Lihat</button>
+                    </div>
+                </article>
             </div>
         </div>
-    </section>
 
+    </div>
+</section>
+
+<section class="section">
+    <h2 class="section__title">Kategori</h2>
+    <div class="grid grid--sm">
+        <a class="btn card stack stack--sm">
+            <h3>Elektronik</h3>
+            <p class="text-muted text-sm">1,204 barang</p>
+        </a>
+        <a class="btn card stack stack--sm">
+            <h3>Alat Musik</h3>
+            <p class="text-muted text-sm">14 barang</p>
+        </a>
+        <a class="btn card stack stack--sm">
+            <h3>Busana</h3>
+            <p class="text-muted text-sm">67 barang</p>
+        </a>
+        <a class="btn card stack stack--sm">
+            <h3>Perkakas</h3>
+            <p class="text-muted text-sm">204 barang</p>
+        </a>
+        <a class="btn card stack stack--sm">
+            <h3>Kendaraan</h3>
+            <p class="text-muted text-sm">4 barang</p>
+        </a>
+        <a class="btn card stack stack--sm">
+            <h3>Alat Masak</h3>
+            <p class="text-muted text-sm">54 barang</p>
+        </a>
+        <a class="btn card stack stack--sm">
+            <h3>Lainnya</h3>
+            <p class="text-muted text-sm">500 barang</p>
+        </a>
+    </div>
+</section>
+
+<div class="container container--narrow container-padding" id="sell">
     <section class="section">
-        <h2>Components</h2>
-        <div class="stack" style="gap: var(--space-4);">
-
+        <h2 class="section__title">Sewakan Barang</h2>
+        <!-- contoh form -->
+        <form class="stack stack--lg">
+            <div class="stack stack--sm">
+                <label for="title">Judul</label>
+                <input class="input" id="title" type="text" placeholder="anda ingin menyewakan apa?">
+            </div>
+            <div class="stack stack--sm">
+                <label for="price">Harga</label>
+                <input class="input" id="price" type="number" placeholder="Rp">
+            </div>
+            <div class="stack stack--sm">
+                <label for="description">Deskripsi</label>
+                <textarea class="input" id="description" rows="4"></textarea>
+            </div>
             <div class="row">
-                <button class="btn">Default</button>
-                <button class="btn btn--primary">Primary</button>
+                <button class="btn btn--primary" type="submit">Sewakan</button>
             </div>
+        </form>
+    </section>
+</div>
 
-            <div class="row">
-                <input class="input" type="text" placeholder="Text input">
+<div class="container container--wide container-padding">
+    <section class="section">
+        <h2 class="section__title">Rincian</h2>
+        <div class="grid grid--lg">
+            <div class="card stack stack--sm">
+                <span class="text-muted text-sm">Keuntungan Bulan ini</span>
+                <h2>$4,280</h2>
             </div>
-
-            <div class="card">
-                <h3>Card</h3>
-                <p>Lorem ipsum dolor sit amet blablabla.</p>
+            <div class="card stack stack--sm">
+                <span class="text-muted text-sm">Barang yang Disewa</span>
+                <h2>38</h2>
             </div>
-
+            <div class="card stack stack--sm">
+                <span class="text-muted text-sm">Order yang didapatkan</span>
+                <h2>7</h2>
+            </div>
         </div>
     </section>
+</div>
 
-</main>
+<div class="container container--wide container-padding">
+    <section class="section">
+        <h2 class="section__title">Order</h2>
+        <div class="stack">
+            <article class="card row row--between">
+                <div class="stack stack--sm">
+                    <h3>Order #1042</h3>
+                    <p class="text-sm">Drum Elektrik | 3 hari</p>
+                </div>
+                <button class="btn btn--primary">Terima</button>
+            </article>
+            <article class="card row row--between">
+                <div class="stack stack--sm">
+                    <h3>Order #1041</h3>
+                    <p class="text-sm">Wok | 2 hari</p>
+                </div>
+                <button class="btn">Lihat</button>
+            </article>
+            <article class="card row row--between">
+                <div class="stack stack--sm">
+                    <h3>Order #1040</h3>
+                    <p class="text-sm">PS3 | 14 hari</p>
+                </div>
+                <button class="btn">Lihat</button>
+            </article>
+        </div>
+    </section>
+</div>
 
 {% endblock %}
