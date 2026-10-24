@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block meta %}
+<title>Halaman Desain</title>
+<link rel="stylesheet" href="/static/css/style.css">
+{% endblock %}
+
+{% block content %}
+<main class="page">
+
+    <section class="section">
+        <h2>Typography</h2>
+        <div class="stack">
+            <p style="font-size: var(--text-2xl); font-weight: 700; line-height: 1.2;">Heading 2xl</p>
+            <p style="font-size: var(--text-xl); font-weight: 600;">Heading xl</p>
+            <p style="font-size: var(--text-lg); font-weight: 600;">Heading lg</p>
+            <p>Body text. The quick brown fox jumps over the lazy dog. Sphinx of black quarts, judge my vow.
+                If you're happy and you know it clap your hands.</p>
+            <p style="font-size: var(--text-sm); color: var(--muted);">Small / muted text</p>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Colors</h2>
+        <div class="row">
+            <div class="swatch"><i style="background: var(--bg)"></i><span>bg</span></div>
+            <div class="swatch"><i style="background: var(--surface)"></i><span>surface</span></div>
+            <div class="swatch"><i style="background: var(--text)"></i><span>text</span></div>
+            <div class="swatch"><i style="background: var(--muted)"></i><span>muted</span></div>
+            <div class="swatch"><i style="background: var(--border)"></i><span>border</span></div>
+            <div class="swatch"><i style="background: var(--primary)"></i><span>primary</span></div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Spacing</h2>
+        <div class="stack" style="gap: var(--space-2);">
+            <div class="space-row"><b>space-1</b>
+                <div class="space-bar" style="width: var(--space-1)"></div>
+            </div>
+            <div class="space-row"><b>space-2</b>
+                <div class="space-bar" style="width: var(--space-2)"></div>
+            </div>
+            <div class="space-row"><b>space-3</b>
+                <div class="space-bar" style="width: var(--space-3)"></div>
+            </div>
+            <div class="space-row"><b>space-4</b>
+                <div class="space-bar" style="width: var(--space-4)"></div>
+            </div>
+            <div class="space-row"><b>space-5</b>
+                <div class="space-bar" style="width: var(--space-5)"></div>
+            </div>
+            <div class="space-row"><b>space-6</b>
+                <div class="space-bar" style="width: var(--space-6)"></div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Components</h2>
+        <div class="stack" style="gap: var(--space-4);">
+
+            <div class="row">
+                <button class="btn">Default</button>
+                <button class="btn btn--primary">Primary</button>
+            </div>
+
+            <div class="row">
+                <input class="input" type="text" placeholder="Text input">
+            </div>
+
+            <div class="card">
+                <h3>Card</h3>
+                <p>Lorem ipsum dolor sit amet blablabla.</p>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+{% endblock %}
