@@ -17,7 +17,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from sewalayan.views import design_page
+
 urlpatterns = [
+    path('design', design_page),
     path('admin/', admin.site.urls),
     path('item/', include('item.urls')),
     path('order/', include('order.urls')),
