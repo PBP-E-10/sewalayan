@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container container--narrow">
+  <form method="post" class="card stack">
+    {% csrf_token %}
+    <h2>Buat akun</h2>
+    {% for field in form %}
+      <div class="stack stack--sm">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% for error in field.errors %}
+          <p class="text-sm">{{ error }}</p>
+        {% endfor %}
+      </div>
+    {% endfor %}
+    {% for error in form.non_field_errors %}
+      <p class="text-sm">{{ error }}</p>
+    {% endfor %}
+    <button class="btn btn--primary" type="submit">Daftar</button>
+    <p class="text-sm text-muted">Sudah punya akun? <a href="{% url 'user:login' %}">Masuk</a></p>
+  </form>
+</div>
+{% endblock %}

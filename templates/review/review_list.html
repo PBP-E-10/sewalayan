@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block meta %}
+<title>Ulasan | Sewalayan</title>
+{% endblock %}
+
+{% block content %}
+<div class="stack stack--lg">
+    <section class="section">
+        <h1 class="section__title">Semua Ulasan</h1>
+        <p class="text-muted">Ulasan ditulis dari halaman detail barang.</p>
+    </section>
+
+    {% include 'review/_item_reviews.html' %}
+</div>
+{% endblock %}
