@@ -16,5 +16,7 @@ urlpatterns = [
     
     # Fungsi hapus barang (hanya bisa diakses owner)
     path('<int:pk>/delete/', views.item_delete, name='item_delete'),
+
+    path("api/items/", views.get_items_json, name="get_items_json")
 ]
 

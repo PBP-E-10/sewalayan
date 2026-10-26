@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static l10n %}
+
+{% block meta %}
+<title>{{ item.name }} - Sewalayan</title>
+<!-- Leaflet CSS untuk Peta OpenStreetMap -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<style>
+    #map {
+        height: 300px;
+        width: 100%;
+        border-radius: var(--radius, 8px);
+        margin-top: 10px;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container container--narrow container-padding">
+    <section class="section stack stack--lg">
+
+        <!-- HEADER DETIL BARANG -->
+        <div class="row row--between" style="align-items: flex-start;">
+            <div>
+                <h2>{{ item.name }}</h2>
+                <p class="text-muted">Disewakan oleh: <strong>{{ item.owner.username }}</strong></p>
+            </div>
+            <div>
+                {% if item.is_available %}
+                    <span class="badge" style="padding: 6px 12px; background: #22c55e; color: white; border-radius: 4px;">Tersedia</span>
+                {% else %}
+                    <span class="badge" style="padding: 6px 12px; background: #ef4444; color: white; border-radius: 4px;">Tidak Tersedia</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="grid grid--2-cols" style="gap: var(--space-4, 20px);">
+            <!-- GAMBAR BARANG -->
+            <div class="card stack">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}" style="width: 100%; height: auto; border-radius: var(--radius, 8px); object-fit: cover;">
+                {% else %}
+                    <div style="background: #e5e7eb; height: 250px; display: flex; align-items: center; justify-content: center; border-radius: var(--radius, 8px); color: #6b7280;">
+                        Tidak Ada Gambar
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- SPESIFIKASI & RINCIAN SEWA -->
+            <div class="card stack stack--sm">
+                <h3>Rincian Barang</h3>
+                <p><strong>Harga Sewa:</strong> Rp{{ item.price_per_day|floatformat:"0g" }} / hari</p>
+                <p><strong>Kategori:</strong> {{ item.category.name|default:"Tanpa Kategori" }}</p>
+                <hr>
+                <h4>Deskripsi</h4>
+                <p style="white-space: pre-line;">{{ item.description }}</p>
+            </div>
+        </div>
+
+        <!-- KOTAK INFORMASI GRADE & SKOR OBJEKTIF -->
+        <div class="card stack stack--sm" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+            <div class="row row--between" style="align-items: center;">
+                <h3>🔍 Penilaian Kondisi Objektif</h3>
+                <span class="badge" style="background: #2563eb; color: white; padding: 6px 12px; border-radius: 6px; font-weight: bold;">
+                    {{ item.condition_grade }}
+                </span>
+            </div>
+            <p class="text-sm text-muted">Grade dihitung secara otomatis oleh sistem berdasarkan 5 indikator universal berikut:</p>
+            <div class="grid grid--2-cols" style="gap: 10px; font-size: 0.9rem;">
+                <div>• Fungsi & Performa: <strong>Skor {{ item.functional_score }}/4</strong></div>
+                <div>• Kondisi Fisik: <strong>Skor {{ item.physical_score }}/4</strong></div>
+                <div>• Keamanan Penggunaan: <strong>Skor {{ item.safety_score }}/4</strong></div>
+                <div>• Kelengkapan Aksesori: <strong>Skor {{ item.completeness_score }}/4</strong></div>
+                <div>• Kebersihan & Higienitas: <strong>Skor {{ item.hygiene_score }}/4</strong></div>
+            </div>
+        </div>
+
+        <!-- LOKASI & PETA INTERAKTIF -->
+        <div class="card stack stack--sm">
+            <h3>📍 Lokasi Pengambilan / Peta</h3>
+            <p><strong>Alamat:</strong> {{ item.location }}</p>
+
+            {% if item.latitude is not None and item.longitude is not None %}
+                <div id="map"></div>
+            {% else %}
+                <p class="text-muted">⚠️ Koordinat peta tidak tersedia untuk alamat ini.</p>
+            {% endif %}
+        </div>
+
+        <!-- TOMBOL AKSI OTORISASI (Pemilik vs Peminjam) -->
+        <div class="row" style="gap: 10px; margin-top: 10px;">
+            {% if user == item.owner %}
+                <a href="{% url 'item_update' item.pk %}" class="btn btn--primary" style="text-decoration: none;">✏️ Edit Barang</a>
+
+                <!-- Hapus harus POST + CSRF, bukan link GET -->
+                <form method="post" action="{% url 'item_delete' item.pk %}" style="display: inline;"
+                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang ini?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn" style="background: #ef4444; color: white;">🗑️ Hapus Barang</button>
+                </form>
+            {% else %}
+                {% if item.is_available %}
+                    <button class="btn btn--primary" onclick="alert('Fitur pengajuan sewa akan segera hadir!');">🛒 Ajukan Sewa</button>
+                {% else %}
+                    <button class="btn" disabled style="opacity: 0.6; cursor: not-allowed;">Sedang Disewa</button>
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'item_list' %}" class="btn" style="text-decoration: none;">← Kembali ke Katalog</a>
+        </div>
+
+    </section>
+</div>
+
+<!-- LEAFLET.JS JAVASCRIPT UNTUK RENDER PETA -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+    {% if item.latitude is not None and item.longitude is not None %}
+    (function () {
+        // unlocalize: paksa titik desimal, bukan koma (locale Indonesia)
+        const lat = {{ item.latitude|unlocalize }};
+        const lon = {{ item.longitude|unlocalize }};
+
+        const map = L.map('map').setView([lat, lon], 15);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Popup dibangun lewat DOM + textContent, bukan string HTML,
+        // supaya nama/alamat buatan pengguna tidak bisa menyisipkan HTML (XSS).
+        const popup = document.createElement('div');
+        const title = document.createElement('b');
+        title.textContent = "{{ item.name|escapejs }}";
+        popup.appendChild(title);
+        popup.appendChild(document.createElement('br'));
+        popup.appendChild(document.createTextNode("{{ item.location|escapejs }}"));
+
+        L.marker([lat, lon]).addTo(map).bindPopup(popup).openPopup();
+    })();
+    {% endif %}
+</script>
+{% endblock %}

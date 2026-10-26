@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta %}
+<title>Katalog Barang - Sewalayan</title>
+<style>
+    /* Wajib ada: toggle visibilitas di JS bergantung pada class ini */
+    .hide { display: none !important; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container container-padding">
+    <section class="section stack stack--lg">
+
+        <!-- HEADER KATALOG -->
+        <div class="row row--between" style="align-items: center;">
+            <div>
+                <p class="section-kicker">Daftar Rental & Sewa</p>
+                <h1 style="margin-bottom: 0;">Katalog Barang</h1>
+            </div>
+            {% if user.is_authenticated %}
+                <a href="{% url 'item_create' %}" class="btn btn--primary" style="text-decoration: none;">
+                    <span>+</span> Sewakan Barang Baru
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- FORM PENCARIAN LIVE SEARCH -->
+        <div class="card stack stack--sm" style="padding: 1.25rem;">
+            <form id="item-search-form" class="row" style="gap: var(--space-2, 10px);">
+                <input type="search"
+                       id="search-input"
+                       name="q"
+                       placeholder="Cari berdasarkan nama atau deskripsi barang..."
+                       class="input"
+                       style="flex: 1;"
+                       autocomplete="off">
+                <button type="submit" class="btn">Cari</button>
+            </form>
+        </div>
+
+        <!-- CONTAINER STATUS & GRID BARANG -->
+        <div>
+            <div id="loading" class="empty-state hide" style="text-align: center; padding: 2rem;">
+                <p class="text-muted">Memuat daftar barang Sewalayan...</p>
+            </div>
+
+            <div id="error" class="empty-state hide" style="text-align: center; padding: 2rem; color: #b42318;">
+                <p>Gagal memuat data barang dari server. Silakan coba beberapa saat lagi.</p>
+            </div>
+
+            <div id="empty" class="empty-state hide" style="text-align: center; padding: 3rem;">
+                <h3>Belum ada barang ditemukan</h3>
+                <p class="text-muted">Coba gunakan kata kunci pencarian yang lain atau daftarkan barang baru.</p>
+            </div>
+
+            <div id="grid" class="grid grid--2-cols hide" style="gap: 1.5rem;"></div>
+        </div>
+
+    </section>
+</div>
+
+<script>
+    // URL diambil dari urls.py, jadi tidak ikut rusak kalau prefix routing berubah
+    const ITEMS_ENDPOINT = "{% url 'get_items_json' %}";
+    const DETAIL_URL_TEMPLATE = "{% url 'item_detail' 0 %}";  // contoh: /item/0/
+    const SEARCH_DEBOUNCE_DELAY = 300;
+
+    let itemsAbortController;
+    let searchDebounceTimer;
+
+    const loadingState = document.getElementById('loading');
+    const errorState = document.getElementById('error');
+    const emptyState = document.getElementById('empty');
+    const gridContainer = document.getElementById('grid');
+    const searchForm = document.getElementById('item-search-form');
+    const searchInput = document.getElementById('search-input');
+
+    // Hanya satu bagian yang tampil dalam satu waktu
+    function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
+        loadingState.classList.toggle('hide', !showLoading);
+        errorState.classList.toggle('hide', !showError);
+        emptyState.classList.toggle('hide', !showEmpty);
+        gridContainer.classList.toggle('hide', !showGrid);
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function formatRupiah(value) {
+        const number = Number(value);
+        if (Number.isNaN(number)) return escapeHtml(value);
+        return number.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+    }
+
+    function buildItemCardElement(item) {
+        const fields = item.fields;
+        const detailUrl = DETAIL_URL_TEMPLATE.replace('/0/', `/${encodeURIComponent(item.pk)}/`);
+        const article = document.createElement('article');
+        article.className = 'card stack stack--sm';
+
+        const imageHtml = fields.image
+            ? `<img src="${escapeHtml(fields.image)}" alt="Foto ${escapeHtml(fields.name)}" style="width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius);">`
+            : '';
+
+        article.innerHTML = `
+            ${imageHtml}
+            <div class="row row--between" style="align-items: center;">
+                <span class="experience-category">${escapeHtml(fields.category_name || 'Umum')}</span>
+                <span class="badge" style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">
+                    ${escapeHtml(fields.condition_grade)}
+                </span>
+            </div>
+            <h2>${escapeHtml(fields.name)}</h2>
+            <p class="experience-description">${escapeHtml(fields.description)}</p>
+            <p class="text-sm text-muted">📍 ${escapeHtml(fields.location || 'Lokasi tidak diatur')}</p>
+            <div class="row row--between" style="align-items: center; margin-top: auto;">
+                <strong>Rp${formatRupiah(fields.price_per_day)} /hari</strong>
+                <a href="${escapeHtml(detailUrl)}" class="btn" style="text-decoration: none;">Lihat Detail</a>
+            </div>
+        `;
+        return article;
+    }
+
+    async function fetchItems(searchQuery = "") {
+        if (itemsAbortController) itemsAbortController.abort();
+        itemsAbortController = new AbortController();
+
+        try {
+            displayPageSection({ showLoading: true });
+
+            const url = searchQuery
+                ? `${ITEMS_ENDPOINT}?q=${encodeURIComponent(searchQuery)}`
+                : ITEMS_ENDPOINT;
+
+            const response = await fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                signal: itemsAbortController.signal,
+            });
+
+            if (!response.ok) throw new Error('Gagal memuat data');
+
+            const itemData = await response.json();
+            gridContainer.innerHTML = "";
+
+            if (itemData.length === 0) {
+                displayPageSection({ showEmpty: true });
+            } else {
+                itemData.forEach(item => gridContainer.appendChild(buildItemCardElement(item)));
+                displayPageSection({ showGrid: true });
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error('Error:', error);
+            displayPageSection({ showError: true });
+        }
+    }
+
+    searchInput.addEventListener('input', function () {
+        clearTimeout(searchDebounceTimer);
+        searchDebounceTimer = setTimeout(() => {
+            fetchItems(searchInput.value.trim());
+        }, SEARCH_DEBOUNCE_DELAY);
+    });
+
+    searchForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        clearTimeout(searchDebounceTimer);
+        fetchItems(searchInput.value.trim());
+    });
+
+    fetchItems();
+</script>
+{% endblock %}
