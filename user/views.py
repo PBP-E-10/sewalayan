@@ -1,4 +1,5 @@
 from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from .forms import RegisterForm, LoginForm
@@ -8,8 +9,13 @@ from .models import Profile
 def show_user(request):
     return HttpResponse("Ini page user!")
 
-def profile_detail(request, user_id):
-    profile = get_object_or_404(Profile, user__id=user_id)
+@login_required(login_url="/user/login/")
+def my_profile(request):
+    profile, _ = Profile.objects.get_or_create(user=request.user)
+    return redirect("user:profile_detail", profile_id=profile.id)
+
+def profile_detail(request, profile_id):
+    profile = get_object_or_404(Profile, id=profile_id)
     return HttpResponse(f"Profil milik {profile.user.username}")
 
 def register(request):
