@@ -20,12 +20,39 @@
             {% endif %}
         </div>
 
-        <!-- PENCARIAN -->
+        <!-- PENCARIAN & FILTER -->
         <div class="card">
-            <form id="item-search-form" class="row">
-                <input type="search" id="search-input" name="q" class="input" style="flex: 1;"
-                       placeholder="Cari berdasarkan nama atau deskripsi barang..." autocomplete="off">
-                <button type="submit" class="btn">Cari</button>
+            <form id="item-search-form" class="stack">
+
+                <div class="row">
+                    <input type="search" id="search-input" name="q" class="input" style="flex: 1;"
+                           placeholder="Cari berdasarkan nama atau deskripsi barang..." autocomplete="off">
+                    <button type="submit" class="btn">Cari</button>
+                </div>
+
+                <div class="grid grid--sm">
+                    <select name="category" class="input">
+                        <option value="">Semua kategori</option>
+                        {% for category in categories %}
+                            <option value="{{ category.pk }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <select name="grade" class="input">
+                        <option value="">Semua kondisi</option>
+                        <option value="Grade A">Grade A — Seperti Baru</option>
+                        <option value="Grade B">Grade B — Sangat Baik</option>
+                        <option value="Grade C">Grade C — Baik/Layak Pakai</option>
+                        <option value="Grade D">Grade D — Terbatas</option>
+                    </select>
+
+                    <input type="number" name="min_price" min="0" class="input" placeholder="Harga min (Rp)">
+                    <input type="number" name="max_price" min="0" class="input" placeholder="Harga maks (Rp)">
+                    <input type="text" name="location" class="input" placeholder="Lokasi (mis. Depok)" autocomplete="off">
+
+                    <button type="reset" class="btn">Reset</button>
+                </div>
+
             </form>
         </div>
 
@@ -118,16 +145,26 @@
         return article;
     }
 
-    async function fetchItems(searchQuery = "") {
+    // Kumpulkan semua kolom form (pencarian + filter) menjadi query string.
+    // Kolom yang kosong dilewati.
+    function buildQueryString() {
+        const params = new URLSearchParams();
+        new FormData(searchForm).forEach(function (value, key) {
+            const text = String(value).trim();
+            if (text) params.append(key, text);
+        });
+        return params.toString();
+    }
+
+    async function fetchItems() {
         if (itemsAbortController) itemsAbortController.abort();
         itemsAbortController = new AbortController();
 
         try {
             displayPageSection({ showLoading: true });
 
-            const url = searchQuery
-                ? `${ITEMS_ENDPOINT}?q=${encodeURIComponent(searchQuery)}`
-                : ITEMS_ENDPOINT;
+            const queryString = buildQueryString();
+            const url = queryString ? `${ITEMS_ENDPOINT}?${queryString}` : ITEMS_ENDPOINT;
 
             const response = await fetch(url, {
                 headers: { 'Accept': 'application/json' },
@@ -152,17 +189,22 @@
         }
     }
 
-    searchInput.addEventListener('input', function () {
+    // Perubahan di kolom mana pun (ketik, pilih dropdown) memuat ulang daftar, dengan jeda 300 ms
+    searchForm.addEventListener('input', function () {
         clearTimeout(searchDebounceTimer);
-        searchDebounceTimer = setTimeout(() => {
-            fetchItems(searchInput.value.trim());
-        }, SEARCH_DEBOUNCE_DELAY);
+        searchDebounceTimer = setTimeout(fetchItems, SEARCH_DEBOUNCE_DELAY);
     });
 
     searchForm.addEventListener('submit', function (e) {
         e.preventDefault();
         clearTimeout(searchDebounceTimer);
-        fetchItems(searchInput.value.trim());
+        fetchItems();
+    });
+
+    // Reset mengosongkan form; nilai baru baru terbaca setelah event selesai
+    searchForm.addEventListener('reset', function () {
+        clearTimeout(searchDebounceTimer);
+        setTimeout(fetchItems, 0);
     });
 
     fetchItems();

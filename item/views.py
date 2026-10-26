@@ -4,7 +4,8 @@ from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
-
+from .models import Item, Category
+from decimal import Decimal, InvalidOperation
 from .forms import ItemForm
 from .models import Item
 
@@ -47,19 +48,53 @@ def _is_eligible(form, item):
         return False
     return True
 
+def _parse_decimal(value):
+    """Ubah teks jadi Decimal, atau None kalau kosong/tidak valid."""
+    try:
+        return Decimal(str(value).strip())
+    except (InvalidOperation, ValueError):
+        return None
+
 
 
 
 def item_list(request):
-    return render(request, 'item/item_list.html')
+    # Daftar kategori dikirim ke template untuk dropdown filter
+    categories = Category.objects.order_by('name')
+    return render(request, 'item/item_list.html', {'categories': categories})
 
 
 def get_items_json(request):
-    query = request.GET.get("q", "").strip()
+    params = request.GET
     items = Item.objects.select_related('category').order_by('-created_at')
 
+    # Pencarian teks
+    query = params.get('q', '').strip()
     if query:
         items = items.filter(Q(name__icontains=query) | Q(description__icontains=query))
+
+    # Filter kategori (berdasarkan id)
+    category = params.get('category', '').strip()
+    if category.isdigit():
+        items = items.filter(category_id=int(category))
+
+    # Filter harga per hari
+    min_price = _parse_decimal(params.get('min_price', ''))
+    if min_price is not None:
+        items = items.filter(price_per_day__gte=min_price)
+    max_price = _parse_decimal(params.get('max_price', ''))
+    if max_price is not None:
+        items = items.filter(price_per_day__lte=max_price)
+
+    # Filter kondisi: nilainya "Grade A", "Grade B", dst. (cocok dengan awal teks grade)
+    grade = params.get('grade', '').strip()
+    if grade:
+        items = items.filter(condition_grade__startswith=grade)
+
+    # Filter lokasi
+    location = params.get('location', '').strip()
+    if location:
+        items = items.filter(location__icontains=location)
 
     data = [
         {
@@ -77,7 +112,6 @@ def get_items_json(request):
         for item in items
     ]
     return JsonResponse(data, safe=False)
-
 
 def item_detail(request, pk):
     item = get_object_or_404(Item.objects.select_related('owner', 'category'), pk=pk)
