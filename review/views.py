@@ -1,30 +1,13 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from review.models import Review
 from django.contrib.auth.decorators import login_required
 from review.forms import ReviewForm
+from item.models import Item
 
 def show_review(request):
-    context = {
-        'form': ReviewForm(user=request.user),
-    }
-    return render(request, 'review/review_list.html', context)
-
-@login_required(login_url='user:login')
-def create_review(request):
-    form = ReviewForm(request.POST or None, user=request.user)
-
-    if request.method == "POST" and form.is_valid():
-        review = form.save(commit=False)
-        review.reviewer = request.user
-        review.save()
-        return redirect('review:show')
-    
-    context = {
-        'form': form,
-    }
-    return render(request, 'review/review_form.html', context)
+    return render(request, 'review/review_list.html')
 
 @login_required(login_url='user:login')
 def edit_review(request, id):
@@ -37,16 +20,8 @@ def edit_review(request, id):
 
     context = {
         'form': form,
-        'is_edit': True,
     }
     return render(request, 'review/review_form.html', context)
-
-@login_required(login_url='user:login')
-@require_POST
-def delete_review(request, id):
-    review = get_object_or_404(Review, pk=id, reviewer=request.user)
-    review.delete()
-    return redirect('review:show')
 
 def show_review_json(request):
     reviews = Review.objects.select_related('reviewer', 'item')
@@ -92,3 +67,10 @@ def delete_review_ajax(request, id):
     review = get_object_or_404(Review, pk=id, reviewer=request.user)
     review.delete()
     return JsonResponse({'status': 'deleted'})
+
+def show_item_reviews(request, item_id):
+    item = get_object_or_404(Item, pk=item_id)
+    context = {
+        'item': item,
+    }
+    return render(request, 'review/item_reviews.html', context)

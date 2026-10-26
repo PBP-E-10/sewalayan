@@ -26,9 +26,6 @@ class ReviewTest(TestCase):
         self.assertFalse(ReviewForm(data={'rating': 5}).is_valid())
 
     def test_tidak_bisa_review_barang_sendiri(self):
-        self.assertFalse(ReviewForm(data={'rating': 5}).is_valid())
-
-    def test_tidak_bisa_review_barang_sendiri(self):
         form = ReviewForm(data={'item': self.my_item.id, 'rating': 5}, user=self.user)
         self.assertFalse(form.is_valid())
         self.assertIn('item', form.errors)
@@ -38,9 +35,19 @@ class ReviewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'review/review_list.html')
 
-    def test_halaman_create_wajib_login(self):
-        response = self.client.get(reverse('review:create'))
+    def test_halaman_edit_wajib_login(self):
+        response = self.client.get(reverse('review:edit', args=[self.review.id]))
         self.assertEqual(response.status_code, 302)
+
+    def test_halaman_ulasan_per_barang(self):
+        response = self.client.get(reverse('review:item_reviews', args=[self.item.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, f'?item={self.item.id}')
+        self.assertTemplateUsed(response, 'review/_item_reviews.html')
+
+    def test_halaman_ulasan_barang_tidak_ada(self):
+        response = self.client.get(reverse('review:item_reviews', args=[9999]))
+        self.assertEqual(response.status_code, 404)
 
     def test_json_berisi_semua_review(self):
         self.client.login(username='mitsuri', password='pass12345')
@@ -97,5 +104,5 @@ class ReviewTest(TestCase):
 
     def test_delete_lewat_get_ditolak(self):
         self.client.login(username='mitsuri', password='pass12345')
-        response = self.client.get(reverse('review:delete', args=[self.review.id]))
+        response = self.client.get(reverse('review:delete_ajax', args=[self.review.id]))
         self.assertEqual(response.status_code, 405)
