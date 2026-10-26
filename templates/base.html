@@ -16,7 +16,7 @@
         <a href="/">Home</a>
         <a href="/about">About</a>
         {% if user.is_authenticated %}
-          <a href="{% url 'user:profile_detail' user.id %}">{{ user.username }}</a>
+          <a href="{% url 'user:me' %}">{{ user.username }}</a>
           <a href="{% url 'user:logout' %}">Keluar</a>
         {% else %}
           <a href="{% url 'user:login' %}">Masuk</a>
