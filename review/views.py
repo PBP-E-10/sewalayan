@@ -11,7 +11,7 @@ def show_review(request):
     }
     return render(request, 'review/review_list.html', context)
 
-@login_required(login_url='/admin/login')
+@login_required(login_url='user:login')
 def create_review(request):
     form = ReviewForm(request.POST or None, user=request.user)
 
@@ -26,7 +26,7 @@ def create_review(request):
     }
     return render(request, 'review/review_form.html', context)
 
-@login_required(login_url='/admin/login')
+@login_required(login_url='user:login')
 def edit_review(request, id):
     review = get_object_or_404(Review, pk=id, reviewer=request.user)
     form = ReviewForm(request.POST or None, instance=review, user=request.user)
@@ -41,7 +41,7 @@ def edit_review(request, id):
     }
     return render(request, 'review/review_form.html', context)
 
-@login_required(login_url='/admin/login')
+@login_required(login_url='user:login')
 @require_POST
 def delete_review(request, id):
     review = get_object_or_404(Review, pk=id, reviewer=request.user)

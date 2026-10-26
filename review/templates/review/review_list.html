@@ -20,7 +20,7 @@
             </form>
         {% else %}
             <div class="card">
-                <p><a href="/admin/login/?next={{ request.path }}">Login</a> untuk menulis ulasan.</p>
+                <p><a href="{% url 'user:login' %}">Login</a> untuk menulis ulasan.</p>
             </div>
         {% endif %}
     </section>
