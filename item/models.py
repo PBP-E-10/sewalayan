@@ -19,7 +19,7 @@ class Item(models.Model):
     description = models.TextField()
     price_per_day = models.DecimalField(max_digits=10, decimal_places=2)
 
-    # --- INDIKATOR PENILAIAN OBJEKTIF (Skala 1-4) ---
+    # Indikator Penilaian Objektif
     RATING_CHOICES = [
         (4, '4 - Sempurna / Optimal'),
         (3, '3 - Baik / Minor Saja'),
