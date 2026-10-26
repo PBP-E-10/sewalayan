@@ -3,9 +3,6 @@
 
 {% block meta %}
 <title>Katalog Barang - Sewalayan</title>
-    <style>
-        .hide { display: none !important; }
-    </style>
 {% endblock %}
 
 {% block content %}
@@ -13,48 +10,42 @@
     <section class="section stack stack--lg">
 
         <!-- HEADER KATALOG -->
-        <div class="row row--between" style="align-items: center;">
-            <div>
-                <p class="section-kicker">Daftar Rental & Sewa</p>
-                <h1 style="margin-bottom: 0;">Katalog Barang</h1>
+        <div class="row row--between">
+            <div class="stack stack--sm">
+                <p class="text-sm text-muted">Daftar Rental & Sewa</p>
+                <h1>Katalog Barang</h1>
             </div>
             {% if user.is_authenticated %}
-                <a href="{% url 'item_create' %}" class="btn btn--primary" style="text-decoration: none;">
-                    <span>+</span> Sewakan Barang Baru
-                </a>
+                <a href="{% url 'item_create' %}" class="btn btn--primary">+ Sewakan Barang Baru</a>
             {% endif %}
         </div>
 
-        <!-- FORM PENCARIAN LIVE SEARCH -->
-        <div class="card stack stack--sm" style="padding: 1.25rem;">
-            <form id="item-search-form" class="row" style="gap: var(--space-2, 10px);">
-                <input type="search"
-                       id="search-input"
-                       name="q"
-                       placeholder="Cari berdasarkan nama atau deskripsi barang..."
-                       class="input"
-                       style="flex: 1;"
-                       autocomplete="off">
+        <!-- PENCARIAN -->
+        <div class="card">
+            <form id="item-search-form" class="row">
+                <input type="search" id="search-input" name="q" class="input" style="flex: 1;"
+                       placeholder="Cari berdasarkan nama atau deskripsi barang..." autocomplete="off">
                 <button type="submit" class="btn">Cari</button>
             </form>
         </div>
 
-        <!-- CONTAINER STATUS & GRID BARANG -->
-        <div>
-            <div id="loading" class="empty-state hide" style="text-align: center; padding: 2rem;">
+        <!-- STATE (disembunyikan/ditampilkan lewat atribut hidden) -->
+        <div style="text-align: center;">
+            <div id="loading" hidden>
                 <p class="text-muted">Memuat daftar barang Sewalayan...</p>
             </div>
-
-            <div id="error" class="empty-state hide" style="text-align: center; padding: 2rem; color: #b42318;">
-                <p>Gagal memuat data barang dari server. Silakan coba beberapa saat lagi.</p>
+            <div id="error" hidden>
+                <p style="color: #B42318;">Gagal memuat data barang dari server. Silakan coba beberapa saat lagi.</p>
             </div>
-
-            <div id="empty" class="empty-state hide" style="text-align: center; padding: 3rem;">
+            <div id="empty" hidden>
                 <h3>Belum ada barang ditemukan</h3>
                 <p class="text-muted">Coba gunakan kata kunci pencarian yang lain atau daftarkan barang baru.</p>
             </div>
+        </div>
 
-            <div id="grid" class="grid grid--2-cols hide" style="gap: 1.5rem;"></div>
+        <!-- GRID BARANG -->
+        <div id="results" hidden>
+            <div id="grid" class="grid"></div>
         </div>
 
     </section>
@@ -72,16 +63,17 @@
     const loadingState = document.getElementById('loading');
     const errorState = document.getElementById('error');
     const emptyState = document.getElementById('empty');
+    const resultsContainer = document.getElementById('results');
     const gridContainer = document.getElementById('grid');
     const searchForm = document.getElementById('item-search-form');
     const searchInput = document.getElementById('search-input');
 
     // Hanya satu bagian yang tampil dalam satu waktu
     function displayPageSection({ showLoading = false, showError = false, showEmpty = false, showGrid = false }) {
-        loadingState.classList.toggle('hide', !showLoading);
-        errorState.classList.toggle('hide', !showError);
-        emptyState.classList.toggle('hide', !showEmpty);
-        gridContainer.classList.toggle('hide', !showGrid);
+        loadingState.hidden = !showLoading;
+        errorState.hidden = !showError;
+        emptyState.hidden = !showEmpty;
+        resultsContainer.hidden = !showGrid;
     }
 
     function escapeHtml(value) {
@@ -106,23 +98,21 @@
         article.className = 'card stack stack--sm';
 
         const imageHtml = fields.image
-            ? `<img src="${escapeHtml(fields.image)}" alt="Foto ${escapeHtml(fields.name)}" style="width: 100%; height: 180px; object-fit: cover; border-radius: var(--radius);">`
+            ? `<img src="${escapeHtml(fields.image)}" alt="Foto ${escapeHtml(fields.name)}" style="width: 100%; height: 11rem; object-fit: cover; border-radius: var(--radius);">`
             : '';
 
         article.innerHTML = `
             ${imageHtml}
-            <div class="row row--between" style="align-items: center;">
-                <span class="experience-category">${escapeHtml(fields.category_name || 'Umum')}</span>
-                <span class="badge" style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">
-                    ${escapeHtml(fields.condition_grade)}
-                </span>
+            <div class="row row--between">
+                <span class="text-sm text-muted">${escapeHtml(fields.category_name || 'Umum')}</span>
+                <strong class="text-sm">${escapeHtml(fields.condition_grade)}</strong>
             </div>
-            <h2>${escapeHtml(fields.name)}</h2>
-            <p class="experience-description">${escapeHtml(fields.description)}</p>
-            <p class="text-sm text-muted">📍 ${escapeHtml(fields.location || 'Lokasi tidak diatur')}</p>
-            <div class="row row--between" style="align-items: center; margin-top: auto;">
-                <strong>Rp${formatRupiah(fields.price_per_day)} /hari</strong>
-                <a href="${escapeHtml(detailUrl)}" class="btn" style="text-decoration: none;">Lihat Detail</a>
+            <h3>${escapeHtml(fields.name)}</h3>
+            <p>${escapeHtml(fields.description)}</p>
+            <p class="text-sm">📍 ${escapeHtml(fields.location || 'Lokasi tidak diatur')}</p>
+            <div class="row row--between" style="margin-top: auto;">
+                <strong class="text-lg">Rp${formatRupiah(fields.price_per_day)} <span class="text-sm text-muted">/hari</span></strong>
+                <a href="${escapeHtml(detailUrl)}" class="btn">Lihat Detail</a>
             </div>
         `;
         return article;

@@ -9,74 +9,77 @@
 <div class="container container--narrow container-padding">
     <section class="section stack stack--lg">
 
-        <div>
-            <h1 style="margin-bottom: 0;">{{ action }} Barang</h1>
+        <div class="stack stack--sm">
+            <p class="text-sm text-muted">Manajemen Sewalayan</p>
+            <h1>{{ action }} Barang</h1>
             <p class="text-muted">Isi formulir dan penilaian indikator objektif di bawah ini secara jujur.</p>
         </div>
 
-        <div class="card stack">
-            <form method="POST" enctype="multipart/form-data" class="stack stack--md">
+        <div class="card">
+            <form method="POST" enctype="multipart/form-data" class="stack">
                 {% csrf_token %}
 
-                {% if form.non_field_errors %}
-                    <div style="background: #fee2e2; color: #b91c1c; padding: 10px; border-radius: var(--radius);">
-                        {{ form.non_field_errors }}
-                    </div>
-                {% endif %}
+                {% for error in form.non_field_errors %}
+                    <p style="color: #B42318;">{{ error }}</p>
+                {% endfor %}
 
-                <!-- Informasi umum: daftar field berasal dari ItemForm.general_fields -->
-                <div class="stack stack--sm">
-                    <h3>Informasi Umum Barang</h3>
-                    {% for field in form.general_fields %}
+                <!-- Informasi umum -->
+                <h2 class="section__title">Informasi Umum Barang</h2>
 
-                        {% if field.widget_type == 'checkbox' %}
-                            <!-- PERBAIKAN 2: checkbox dirender manual dengan inline style -->
-                            <div style="display: flex; align-items: center; justify-content: flex-start; gap: 10px;">
-                                <input type="checkbox" name="{{ field.html_name }}" id="{{ field.id_for_label }}"
-                                       {% if field.value %}checked{% endif %}
-                                       style="width: 18px; height: 18px; margin: 0; padding: 0; flex: none;">
-                                <label for="{{ field.id_for_label }}" style="font-weight: 600; margin: 0;">{{ field.label }}</label>
-                            </div>
-                        {% else %}
-                            <div class="stack" style="gap: 4px;">
-                                <label for="{{ field.id_for_label }}" style="font-weight: 600;">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.help_text %}
-                                    <small class="text-muted">{{ field.help_text }}</small>
-                                {% endif %}
-                                {% for error in field.errors %}
-                                    <span style="color: #ef4444; font-size: 0.85rem;">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
+                {% for field in form.general_fields %}
+                    {% if field.widget_type == 'checkbox' %}
+                        <!-- Checkbox: .row (flex row) supaya tidak melebar -->
+                        <label for="{{ field.id_for_label }}" class="row">
+                            {{ field }} <strong>{{ field.label }}</strong>
+                        </label>
 
-                    {% endfor %}
-                </div>
+                    {% elif field.widget_type == 'clearablefileinput' or field.widget_type == 'fileinput' %}
+                        <!-- Upload gambar: bungkus biasa (bukan .stack) agar checkbox "Clear" tidak melebar -->
+                        <div>
+                            <div><label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label></div>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <p class="text-sm" style="color: #B42318;">{{ error }}</p>
+                            {% endfor %}
+                        </div>
 
-                <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 10px 0;">
-
-                <!-- Kuesioner penilaian objektif: daftar field berasal dari ItemForm.score_fields -->
-                <div class="stack stack--sm">
-                    <h3>🔍 Kuesioner Penilaian Kondisi Objektif (Skala 1–4)</h3>
-                    <p class="text-sm text-muted">Pilih tingkat penilaian yang paling sesuai dengan kondisi fisik dan fungsional barang saat ini.</p>
-
-                    {% for field in form.score_fields %}
-                        <div class="card stack stack--xs" style="background: #f9fafb; padding: 1rem; border: 1px solid #e5e7eb;">
-                            <label for="{{ field.id_for_label }}" style="font-weight: 600; color: #1f2937;">{{ field.label }}</label>
+                    {% else %}
+                        <div class="stack stack--sm">
+                            <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
                             {{ field }}
                             {% if field.help_text %}
                                 <small class="text-muted">{{ field.help_text }}</small>
                             {% endif %}
                             {% for error in field.errors %}
-                                <span style="color: #ef4444; font-size: 0.85rem;">{{ error }}</span>
+                                <p class="text-sm" style="color: #B42318;">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Kuesioner penilaian objektif (skala 1-4) -->
+                <h2 class="section__title">🔍 Penilaian Kondisi Objektif (Skala 1–4)</h2>
+                <p class="text-sm text-muted">Pilih tingkat penilaian yang paling sesuai dengan kondisi fisik dan fungsional barang saat ini.</p>
+
+                <div class="grid">
+                    {% for field in form.score_fields %}
+                        <div class="stack stack--sm">
+                            <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <p class="text-sm" style="color: #B42318;">{{ error }}</p>
                             {% endfor %}
                         </div>
                     {% endfor %}
                 </div>
 
-                <div class="row" style="gap: 10px; margin-top: 1rem;">
+                <!-- Tombol aksi -->
+                <div class="row">
                     <button type="submit" class="btn btn--primary">Simpan Barang</button>
-                    <a href="{% url 'item_list' %}" class="btn" style="text-decoration: none; background: #e5e7eb; color: #374151;">Batal</a>
+                    <a href="{% url 'item_list' %}" class="btn">Batal</a>
                 </div>
 
             </form>

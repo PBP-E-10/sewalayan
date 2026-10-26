@@ -17,7 +17,6 @@ NOMINATIM_HEADERS = {'User-Agent': 'SewalayanApp/1.0 (student project)'}
 def _is_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
-
 def geocode_address(address):
     """Kembalikan (lat, lon) dari Nominatim, atau (None, None) jika gagal."""
     if not address:
@@ -36,7 +35,6 @@ def geocode_address(address):
     except (requests.RequestException, ValueError, KeyError, IndexError):
         pass
     return None, None
-
 
 def _is_eligible(form, item):
     """Tolak barang yang gugur di syarat mutlak (knock-out) penilaian."""
