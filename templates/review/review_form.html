@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block meta %}
+<title>Edit Ulasan | Sewalayan</title>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+    <h1 class="section__title">Edit Ulasan</h1>
+
+    <form method="POST" class="card stack">
+        {% csrf_token %}
+        {% include 'review/_form_fields.html' %}
+        <div class="row">
+            <button type="submit" class="btn btn--primary">Simpan Perubahan</button>
+            <a href="{% url 'review:show' %}" class="btn">Batal</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
