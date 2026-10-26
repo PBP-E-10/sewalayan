@@ -10,8 +10,8 @@ class LandingPageTest(TestCase):
 
     def buat_barang(self, nama):
         return Item.objects.create(
-            user=self.owner, name=nama, description='Deskripsi barang',
-            price_per_day=50000, stock=1,
+            owner=self.owner, name=nama, description='Deskripsi barang',
+            price_per_day=50000, location='Depok',
         )
 
     def test_landing_page_bisa_dibuka(self):
