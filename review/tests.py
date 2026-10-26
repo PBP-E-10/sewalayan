@@ -9,8 +9,8 @@ class ReviewTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='mitsuri', password='pass12345')
         self.other = User.objects.create_user(username='obanai', password='pass12345')
-        self.item = Item.objects.create(user=self.other, name='Kamera', description='Kamera DSLR', price_per_day=50000, stock=1)
-        self.my_item = Item.objects.create(user=self.user, name='Tenda', description='Tenda 4 orang', price_per_day=30000, stock=1)
+        self.item = Item.objects.create(owner=self.other, name='Kamera', description='Kamera DSLR', price_per_day=50000, location='Depok')
+        self.my_item = Item.objects.create(owner=self.user, name='Tenda', description='Tenda 4 orang', price_per_day=30000, location='Depok')
         self.review = Review.objects.create(reviewer=self.user, item=self.item, rating=5, comment='Bagus')
         self.other_review = Review.objects.create(reviewer=self.other, item=self.my_item, rating=3, comment='Lumayan')
 
