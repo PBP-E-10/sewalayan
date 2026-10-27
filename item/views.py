@@ -1,13 +1,14 @@
 import requests
+from decimal import Decimal, InvalidOperation
+
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
+
 from .models import Item, Category
-from decimal import Decimal, InvalidOperation
 from .forms import ItemForm
-from .models import Item
 from .grading import calculate_condition_grade, is_eligible
 
 LOGIN_URL = '/auth/login/'
@@ -16,9 +17,12 @@ NOMINATIM_HEADERS = {'User-Agent': 'SewalayanApp/1.0 (student project)'}
 
 
 # Helper
+
+# Melakukan pengecekan apakah request berasal dari Javascript
 def _is_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest'
 
+# Mengubah alamat versi teks menjadi koordinat
 def geocode_address(address):
     """Kembalikan (lat, lon) dari Nominatim, atau (None, None) jika gagal."""
     if not address:
@@ -38,6 +42,7 @@ def geocode_address(address):
         pass
     return None, None
 
+# Melakukan pemeriksaan apakah item lolos sistem skor penilaian
 def _is_eligible(form, item):
     """Tolak barang yang gugur di syarat mutlak (knock-out) penilaian."""
     if not is_eligible(item):
@@ -58,9 +63,8 @@ def _parse_decimal(value):
 
 
 
-
+# Menampilkan katalog
 def item_list(request):
-    # Daftar kategori dikirim ke template untuk dropdown filter
     categories = Category.objects.order_by('name')
     return render(request, 'item/item_list.html', {'categories': categories})
 
@@ -114,9 +118,11 @@ def get_items_json(request):
     ]
     return JsonResponse(data, safe=False)
 
+# Menampilkan detail barang (tanpa login pun berfungsi)
 def item_detail(request, pk):
     item = get_object_or_404(Item.objects.select_related('owner', 'category'), pk=pk)
     return render(request, 'item/item_detail.html', {'item': item})
+
 
 
 @login_required(login_url=LOGIN_URL)
@@ -139,7 +145,7 @@ def item_create(request):
                     })
                 return redirect('item_list')
 
-        # Form tidak valid, atau barang gugur di syarat mutlak
+        # Form tidak valid, atau item tidak lolos sistem skor penilaian
         if _is_ajax(request):
             return JsonResponse({
                 'status': 'error',
@@ -164,7 +170,7 @@ def item_update(request, pk):
             updated_item = form.save(commit=False)
 
             if _is_eligible(form, updated_item):
-                # Geocode ulang hanya jika alamat berubah, supaya peta tidak menunjuk lokasi lama
+                # Melakukan geocode ulang jika alamat berubah, supaya peta tidak menunjuk lokasi lama
                 if 'location' in form.changed_data:
                     updated_item.latitude, updated_item.longitude = geocode_address(updated_item.location)
                 updated_item.condition_grade = calculate_condition_grade(updated_item)

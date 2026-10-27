@@ -56,7 +56,7 @@
             </form>
         </div>
 
-        <!-- STATE (disembunyikan/ditampilkan lewat atribut hidden) -->
+        <!-- STATE disembunyikan/ditampilkan lewat atribut hidden -->
         <div style="text-align: center;">
             <div id="loading" hidden>
                 <p class="text-muted">Memuat daftar barang Sewalayan...</p>
@@ -145,7 +145,7 @@
         return article;
     }
 
-    // Kumpulkan semua kolom form (pencarian + filter) menjadi query string.
+    // Mengumpulkan semua kolom form (pencarian + filter) menjadi query string.
     // Kolom yang kosong dilewati.
     function buildQueryString() {
         const params = new URLSearchParams();
@@ -189,7 +189,7 @@
         }
     }
 
-    // Perubahan di kolom mana pun (ketik, pilih dropdown) memuat ulang daftar, dengan jeda 300 ms
+   
     searchForm.addEventListener('input', function () {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(fetchItems, SEARCH_DEBOUNCE_DELAY);
@@ -201,7 +201,6 @@
         fetchItems();
     });
 
-    // Reset mengosongkan form; nilai baru baru terbaca setelah event selesai
     searchForm.addEventListener('reset', function () {
         clearTimeout(searchDebounceTimer);
         setTimeout(fetchItems, 0);

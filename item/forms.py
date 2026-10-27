@@ -33,8 +33,6 @@ class ItemForm(ModelForm):
             'name': TextInput(attrs={'class': 'input', 'placeholder': 'Contoh: Speaker Bluetooth JBL'}),
             'description': Textarea(attrs={'class': 'input', 'rows': 4, 'placeholder': 'Jelaskan kondisi dan kelengkapan barang'}),
             'location': TextInput(attrs={'class': 'input', 'placeholder': 'Contoh: Depok, Jawa Barat'}),
-            # Opsional: hilangkan checkbox "Clear" bawaan Django pada upload gambar
-            # 'image': forms.FileInput(attrs={'accept': 'image/*'}),
         }
 
     def __init__(self, *args, **kwargs):

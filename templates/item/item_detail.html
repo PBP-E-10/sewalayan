@@ -49,7 +49,7 @@
             </div>
         </div>
 
-        <!-- GRADE & SKOR OBJEKTIF -->
+        <!-- GRADE & SKOR -->
         <div class="card stack stack--sm">
             <div class="row row--between">
                 <h3>🔍 Penilaian Kondisi Objektif</h3>
@@ -82,7 +82,6 @@
             {% if user == item.owner %}
                 <a href="{% url 'item_update' item.pk %}" class="btn btn--primary">✏️ Edit Barang</a>
 
-                <!-- Hapus harus POST + CSRF, bukan link GET -->
                 <form method="post" action="{% url 'item_delete' item.pk %}"
                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang ini?');">
                     {% csrf_token %}
@@ -105,7 +104,6 @@
 <script>
     {% if item.latitude is not None and item.longitude is not None %}
     (function () {
-        // unlocalize: paksa titik desimal, bukan koma
         const lat = {{ item.latitude|unlocalize }};
         const lon = {{ item.longitude|unlocalize }};
 
