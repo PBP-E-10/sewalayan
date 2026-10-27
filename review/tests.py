@@ -8,7 +8,7 @@ from django.utils import timezone
 from item.models import Item
 from order.models import Order
 from review.forms import ReviewForm
-from review.models import Review
+from review.models import Review, Report
 
 
 class ReviewTest(TestCase):
@@ -162,3 +162,83 @@ class ReviewTest(TestCase):
         self.login(self.penyewa)
         response = self.client.get(reverse('review:delete_ajax', args=[self.review.id]))
         self.assertEqual(response.status_code, 405)
+
+class ReportTest(TestCase):
+    def setUp(self):
+        self.penyewa = User.objects.create_user(username='penyewa', password='pass12345')
+        self.pemilik = User.objects.create_user(username='pemilik', password='pass12345')
+        self.orang_lain = User.objects.create_user(username='orang_lain', password='pass12345')
+
+        self.item = Item.objects.create(
+            owner=self.pemilik, name='Kamera', description='Kamera DSLR',
+            price_per_day=50000, location='Depok',
+        )
+        self.order = Order.objects.create(
+            item=self.item, buyer=self.penyewa, status='picked-up',
+            purchase_price=50000, returned_at=timezone.now() + timedelta(days=1),
+        )
+        self.url = reverse('review:create_report_ajax', args=[self.order.id])
+        self.data = {'reason': 'damaged', 'description': 'Lensanya retak'}
+
+    def login(self, user):
+        self.client.login(username=user.username, password='pass12345')
+
+    def test_penyewa_bisa_melapor_dan_barang_dinonaktifkan(self):
+        self.login(self.penyewa)
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 201)
+        report = Report.objects.get(pk=response.json()['id'])
+        self.assertEqual(report.reporter, self.penyewa)
+        self.assertEqual(report.status, 'open')
+        self.item.refresh_from_db()
+        self.assertFalse(self.item.is_available)
+
+    def test_pemilik_bisa_melapor(self):
+        self.login(self.pemilik)
+        response = self.client.post(self.url, {'reason': 'not_returned', 'description': 'Belum balik'})
+        self.assertEqual(response.status_code, 201)
+
+    def test_orang_lain_tidak_bisa_melapor(self):
+        self.login(self.orang_lain)
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 403)
+
+    def test_tanpa_login_ditolak(self):
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 401)
+
+    def test_tidak_bisa_lapor_dobel_selama_masih_aktif(self):
+        self.login(self.penyewa)
+        self.client.post(self.url, self.data)
+        response = self.client.post(self.url, self.data)
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Report.objects.count(), 1)
+
+    def test_alasan_tidak_valid_ditolak(self):
+        self.login(self.penyewa)
+        response = self.client.post(self.url, {'reason': 'ngasal', 'description': 'x'})
+        self.assertEqual(response.status_code, 400)
+
+    def test_terlapor_adalah_pihak_lawan(self):
+        dari_penyewa = Report.objects.create(order=self.order, reporter=self.penyewa, reason='damaged', description='x')
+        dari_pemilik = Report.objects.create(order=self.order, reporter=self.pemilik, reason='late', description='x')
+        self.assertEqual(dari_penyewa.reported_user, self.pemilik)
+        self.assertEqual(dari_pemilik.reported_user, self.penyewa)
+
+    def test_halaman_laporan_saya(self):
+        Report.objects.create(order=self.order, reporter=self.penyewa, reason='damaged', description='Lensanya retak')
+        self.login(self.penyewa)
+        response = self.client.get(reverse('review:my_reports'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Lensanya retak')
+
+    def test_halaman_laporan_saya_wajib_login(self):
+        response = self.client.get(reverse('review:my_reports'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_form_lapor_hanya_muncul_untuk_penyewa_dan_pemilik(self):
+        self.login(self.penyewa)
+        self.assertContains(self.client.get(reverse('order:detail', args=[self.order.id])), 'order-report-form')
+        self.client.logout()
+        self.login(self.orang_lain)
+        self.assertNotContains(self.client.get(reverse('order:detail', args=[self.order.id])), 'order-report-form')

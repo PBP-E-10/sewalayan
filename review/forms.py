@@ -1,5 +1,5 @@
 from django import forms
-from review.models import Review
+from review.models import Review, Report
 
 class ReviewForm(forms.ModelForm):
     class Meta:
@@ -12,4 +12,17 @@ class ReviewForm(forms.ModelForm):
         labels = {
             'rating': 'Rating (1-5)',
             'comment': 'Ulasan',
+        }
+
+class ReportForm(forms.ModelForm):
+    class Meta:
+        model = Report
+        fields = ['reason', 'description']
+        widgets = {
+            'reason': forms.Select(attrs={'class': 'input'}),
+            'description': forms.Textarea(attrs={'class': 'input', 'rows': 3, 'placeholder': "Jelaskan masalahnya..."}),
+        }
+        labels = {
+            'reason': 'Alasan',
+            'description': 'Keterangan',
         }
