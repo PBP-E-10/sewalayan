@@ -1,9 +1,0 @@
-{% for field in form %}
-    <div class="stack stack--sm">
-        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
-        {{ field }}
-        {% for error in field.errors %}
-            <small class="text-sm text-muted">{{ error }}</small>
-        {% endfor %}
-    </div>
-{% endfor %}

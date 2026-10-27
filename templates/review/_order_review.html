@@ -1,0 +1,61 @@
+{% if user == order.buyer %}
+<section class="section" id="order-review"
+         data-create-url="{% url 'review:create_ajax' order.id %}">
+    <h2 class="section__title">Ulasanmu</h2>
+
+    {% if order.review %}
+        <article class="card stack stack--sm">
+            <strong>{{ order.review.rating }}/5</strong>
+            <p>{{ order.review.comment|default:"(tanpa komentar)" }}</p>
+            <div class="row">
+                <a class="btn" href="{% url 'review:edit' order.review.id %}">Edit</a>
+            </div>
+        </article>
+    {% elif order.status == 'finished' %}
+        <form id="order-review-form" class="card stack">
+            {% csrf_token %}
+            <div class="stack stack--sm">
+                <label for="order-review-rating">Rating (1-5)</label>
+                <input class="input" id="order-review-rating" type="number" name="rating" min="1" max="5" required>
+            </div>
+
+            <div class="stack stack--sm">
+                <label for="order-review-comment">Ulasan</label>
+                <textarea class="input" id="order-review-comment" name="comment" rows="3"
+                          placeholder="Ceritakan pengalamanmu menyewa barang ini..."></textarea>
+            </div>
+
+            <div class="row">
+                <button type="submit" class="btn btn--primary">Kirim Ulasan</button>
+                <span id="order-review-message" class="text-sm text-muted"></span>
+            </div>
+        </form>
+
+        <script>
+        (() => {
+            const sectionEl = document.getElementById('order-review');
+            const formEl = document.getElementById('order-review-form');
+            const messageEl = document.getElementById('order-review-message');
+
+            formEl.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const response = await fetch(sectionEl.dataset.createUrl, {
+                    method: 'POST',
+                    body: new FormData(formEl),
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    const data = await response.json();
+                    messageEl.textContent = data.error || Object.values(data.errors).flat().join(' ');
+                }
+            });
+        })();
+        </script>
+    {% else %}
+        <p class="text-muted">Ulasan bisa ditulis setelah sewa selesai.</p>
+    {% endif %}
+</section>
+{% endif %}

@@ -11,7 +11,7 @@ urlpatterns = [
     path('', show_review, name='show'),
     path('<int:id>/edit/', edit_review, name='edit'),
     path('json/', show_review_json, name='show_json'),
-    path('create-ajax/', create_review_ajax, name='create_ajax'),
+    path('order/<uuid:order_id>/create-ajax/', create_review_ajax, name='create_ajax'),
     path('<int:id>/delete-ajax/', delete_review_ajax, name='delete_ajax'),
     path('item/<int:item_id>/', show_item_reviews, name='item_reviews'),
 ]
