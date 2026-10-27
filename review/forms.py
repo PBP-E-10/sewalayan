@@ -22,6 +22,6 @@ class ReviewForm(forms.ModelForm):
 
     def clean_item(self):
         item = self.cleaned_data['item']
-        if self.user is not None and item.user == self.user:
+        if self.user is not None and item.owner == self.user:
             raise forms.ValidationError('Kamu tidak bisa mengulas barangmu sendiri.')
         return item
