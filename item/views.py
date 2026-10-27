@@ -8,6 +8,7 @@ from .models import Item, Category
 from decimal import Decimal, InvalidOperation
 from .forms import ItemForm
 from .models import Item
+from .grading import calculate_condition_grade, is_eligible
 
 LOGIN_URL = '/auth/login/'
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
@@ -39,7 +40,7 @@ def geocode_address(address):
 
 def _is_eligible(form, item):
     """Tolak barang yang gugur di syarat mutlak (knock-out) penilaian."""
-    if item.calculate_condition_grade() == Item.NOT_ELIGIBLE_GRADE:
+    if not is_eligible(item):
         form.add_error(
             None,
             "Barang dengan kondisi ini tidak layak disewakan. "
@@ -128,7 +129,8 @@ def item_create(request):
 
             if _is_eligible(form, item):
                 item.latitude, item.longitude = geocode_address(item.location)
-                item.save()  # grade dihitung otomatis di Item.save()
+                item.condition_grade = calculate_condition_grade(item)
+                item.save()
 
                 if _is_ajax(request):
                     return JsonResponse({
@@ -165,6 +167,7 @@ def item_update(request, pk):
                 # Geocode ulang hanya jika alamat berubah, supaya peta tidak menunjuk lokasi lama
                 if 'location' in form.changed_data:
                     updated_item.latitude, updated_item.longitude = geocode_address(updated_item.location)
+                updated_item.condition_grade = calculate_condition_grade(updated_item)
                 updated_item.save()
                 return redirect('item_detail', pk=item.pk)
     else:
