@@ -1,0 +1,19 @@
+{% if user == order.buyer %}
+<section class="section">
+    <h2 class="section__title">Ulasanmu</h2>
+
+    {% if order.review %}
+        <article class="card stack stack--sm">
+            <strong>{{ order.review.rating }}/5</strong>
+            <p>{{ order.review.comment|default:"(tanpa komentar)" }}</p>
+            <div class="row">
+                <a class="btn" href="{% url 'review:order_review' order.id %}">Edit Ulasan</a>
+            </div>
+        </article>
+    {% elif order.status == 'finished' %}
+        <a class="btn btn--primary" href="{% url 'review:order_review' order.id %}">Tulis Ulasan</a>
+    {% else %}
+        <p class="text-muted">Ulasan bisa ditulis setelah sewa selesai.</p>
+    {% endif %}
+</section>
+{% endif %}

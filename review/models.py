@@ -10,10 +10,10 @@ class Review(models.Model):
         related_name='reviews_given', 
         null=True,
     )
-    item = models.ForeignKey(
-        'item.Item',
+    order = models.OneToOneField(
+        'order.Order',
         on_delete=models.CASCADE,
-        related_name='reviews',
+        related_name='review',
         null=True,
     )
     rating = models.PositiveSmallIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])

@@ -6,5 +6,6 @@
 
 {% block content %}
 <h1 class="section__title">{{ order.item.name }}</h1>
-{% endblock %}
 
+{% include 'review/_order_review.html' %}
+{% endblock %}
