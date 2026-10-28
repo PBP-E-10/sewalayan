@@ -80,9 +80,9 @@
         <!-- TOMBOL AKSI -->
         <div class="row">
             {% if user == item.owner %}
-                <a href="{% url 'item_update' item.pk %}" class="btn btn--primary">✏️ Edit Barang</a>
+                <a href="{% url 'item:update' item.pk %}" class="btn btn--primary">✏️ Edit Barang</a>
 
-                <form method="post" action="{% url 'item_delete' item.pk %}"
+                <form method="post" action="{% url 'item:delete' item.pk %}"
                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang ini?');">
                     {% csrf_token %}
                     <button type="submit" class="btn" style="color: #B42318; border-color: #B42318;">🗑️ Hapus Barang</button>
@@ -94,7 +94,7 @@
                     <button type="button" class="btn" disabled style="opacity: 0.6; cursor: not-allowed;">Sedang Disewa</button>
                 {% endif %}
             {% endif %}
-            <a href="{% url 'item_list' %}" class="btn">← Kembali ke Katalog</a>
+            <a href="{% url 'item:list' %}" class="btn">← Kembali ke Katalog</a>
         </div>
 
     </section>

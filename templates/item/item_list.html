@@ -16,7 +16,7 @@
                 <h1>Katalog Barang</h1>
             </div>
             {% if user.is_authenticated %}
-                <a href="{% url 'item_create' %}" class="btn btn--primary">+ Sewakan Barang Baru</a>
+               <a href="{% url 'item:create' %}" class="btn btn--primary">+ Sewakan Barang Baru</a>
             {% endif %}
         </div>
 
@@ -80,8 +80,8 @@
 
 <script>
     // URL diambil dari urls.py, jadi tidak ikut rusak kalau prefix routing berubah
-    const ITEMS_ENDPOINT = "{% url 'get_items_json' %}";
-    const DETAIL_URL_TEMPLATE = "{% url 'item_detail' 0 %}";  // contoh: /item/0/
+    const ITEMS_ENDPOINT = "{% url 'item:get_json' %}";
+    const DETAIL_URL_TEMPLATE = "{% url 'item:detail' 0 %}";
     const SEARCH_DEBOUNCE_DELAY = 300;
 
     let itemsAbortController;
