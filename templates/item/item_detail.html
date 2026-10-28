@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static l10n %}
+
+{% block meta %}
+<title>{{ item.name }} - Sewalayan</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+{% endblock %}
+
+{% block content %}
+<div class="container container--narrow container-padding">
+    <section class="section stack stack--lg">
+
+        <!-- HEADER -->
+        <div class="row row--between">
+            <div class="stack stack--sm">
+                <h2>{{ item.name }}</h2>
+                <p class="text-muted">Disewakan oleh: <strong>{{ item.owner.username }}</strong></p>
+            </div>
+            {% if item.is_available %}
+                <strong style="color: #4F7A3A;">● Tersedia</strong>
+            {% else %}
+                <strong style="color: #B42318;">● Tidak Tersedia</strong>
+            {% endif %}
+        </div>
+
+        <div class="grid">
+            <!-- GAMBAR -->
+            <div class="card">
+                {% if item.image %}
+                    <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                {% else %}
+                    <p>Tidak ada gambar</p>
+                {% endif %}
+            </div>
+
+            <!-- RINCIAN -->
+            <div class="card stack stack--sm">
+                <h3>Rincian Barang</h3>
+                <div class="row row--between">
+                    <span class="text-muted">Harga sewa</span>
+                    <strong>Rp{{ item.price_per_day|floatformat:"0g" }} / hari</strong>
+                </div>
+                <div class="row row--between">
+                    <span class="text-muted">Kategori</span>
+                    <strong>{{ item.category.name|default:"Tanpa Kategori" }}</strong>
+                </div>
+                <strong>Deskripsi</strong>
+                <div class="prose">{{ item.description|linebreaksbr }}</div>
+            </div>
+        </div>
+
+        <!-- GRADE & SKOR -->
+        <div class="card stack stack--sm">
+            <div class="row row--between">
+                <h3>🔍 Penilaian Kondisi Objektif</h3>
+                <strong>{{ item.condition_grade }}</strong>
+            </div>
+            <p class="text-sm">Grade dihitung secara otomatis oleh sistem berdasarkan 5 indikator berikut:</p>
+            <div class="grid">
+                <div class="row row--between"><span>Fungsi & Performa</span><strong>{{ item.functional_score }}/4</strong></div>
+                <div class="row row--between"><span>Kondisi Fisik</span><strong>{{ item.physical_score }}/4</strong></div>
+                <div class="row row--between"><span>Keamanan Penggunaan</span><strong>{{ item.safety_score }}/4</strong></div>
+                <div class="row row--between"><span>Kelengkapan Aksesori</span><strong>{{ item.completeness_score }}/4</strong></div>
+                <div class="row row--between"><span>Kebersihan & Higienitas</span><strong>{{ item.hygiene_score }}/4</strong></div>
+            </div>
+        </div>
+
+        <!-- LOKASI & PETA -->
+        <div class="card stack stack--sm">
+            <h3>📍 Lokasi Pengambilan / Peta</h3>
+            <p><strong>Alamat:</strong> {{ item.location }}</p>
+
+            {% if item.latitude is not None and item.longitude is not None %}
+                <div id="map" style="height: 300px; border-radius: var(--radius); z-index: 1;"></div>
+            {% else %}
+                <p>⚠️ Koordinat peta tidak tersedia untuk alamat ini.</p>
+            {% endif %}
+        </div>
+
+        <!-- TOMBOL AKSI -->
+        <div class="row">
+            {% if user == item.owner %}
+                <a href="{% url 'item:update' item.pk %}" class="btn btn--primary">✏️ Edit Barang</a>
+
+                <form method="post" action="{% url 'item:delete' item.pk %}"
+                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang ini?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn" style="color: #B42318; border-color: #B42318;">🗑️ Hapus Barang</button>
+                </form>
+            {% else %}
+                {% if item.is_available %}
+                    <button type="button" class="btn btn--primary" onclick="alert('Fitur pengajuan sewa akan segera hadir!');">🛒 Ajukan Sewa</button>
+                {% else %}
+                    <button type="button" class="btn" disabled style="opacity: 0.6; cursor: not-allowed;">Sedang Disewa</button>
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'item:list' %}" class="btn">← Kembali ke Katalog</a>
+        </div>
+
+    </section>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+    {% if item.latitude is not None and item.longitude is not None %}
+    (function () {
+        const lat = {{ item.latitude|unlocalize }};
+        const lon = {{ item.longitude|unlocalize }};
+
+        const map = L.map('map').setView([lat, lon], 15);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        // Popup lewat DOM + textContent, bukan string HTML (aman dari XSS)
+        const popup = document.createElement('div');
+        const title = document.createElement('b');
+        title.textContent = "{{ item.name|escapejs }}";
+        popup.appendChild(title);
+        popup.appendChild(document.createElement('br'));
+        popup.appendChild(document.createTextNode("{{ item.location|escapejs }}"));
+
+        L.marker([lat, lon]).addTo(map).bindPopup(popup).openPopup();
+    })();
+    {% endif %}
+</script>
+{% endblock %}
