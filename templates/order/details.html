@@ -14,8 +14,7 @@
             <p>Ambil pada: {{ order.taken_at_fmt }}</p>
             <p>Kembalikan pada: {{ order.returned_at_fmt }}</p>
             <div class="row">
-            <!-- TODO: tambah href ke url penampilan item -->
-            <a class="btn btn--primary">Lihat barang</a>
+            <a href="{% url 'item:detail' order.item.id %}" class="btn btn--primary">Lihat barang</a>
             </div>
         </div>
         <div class="card stack stack--sm">
