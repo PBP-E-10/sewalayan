@@ -1,14 +1,14 @@
 {% extends 'base.html' %}
 
 {% block meta %}
-<title>Ulasan | Sewalayan</title>
+<title>{% if item %}Ulasan {{ item.name }}{% else %}Ulasan{% endif %} | Sewalayan</title>
 {% endblock %}
 
 {% block content %}
 <div class="stack stack--lg">
     <section class="section">
-        <h1 class="section__title">Semua Ulasan</h1>
-        <p class="text-muted">Ulasan ditulis dari halaman detail barang.</p>
+        <h1 class="section__title">{% if item %}{{ item.name }}{% else %}Semua Ulasan{% endif %}</h1>
+        <p class="text-muted">Ulasan ditulis dari halaman detail order setelah sewa selesai.</p>
     </section>
 
     {% include 'review/_item_reviews.html' %}

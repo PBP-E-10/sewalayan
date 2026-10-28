@@ -1,41 +1,10 @@
 <section class="section" id="item-reviews"
-         data-json-url="{% url 'review:show_json' %}{% if item %}?item={{ item.id }}{% endif %}"
-         data-create-url="{% url 'review:create_ajax' %}"
-         data-show-item-name="{% if item %}false{% else %}true{% endif %}">
+        data-json-url="{% url 'review:show_json' %}{% if item %}?item={{ item.id }}{% endif %}"
+        data-show-item-name="{% if item %}false{% else %}true{% endif %}">
     <h2 class="section__title">Ulasan</h2>
 
     <div class="stack">
         <p id="item-review-summary" class="text-muted">Memuat ulasan...</p>
-
-        {% if item %}
-            {% if user.is_authenticated %}
-                <form id="item-review-form" class="card stack">
-                    {% csrf_token %}
-                    <input type="hidden" name="item" value="{{ item.id }}">
-
-                    <div class="stack stack--sm">
-                        <label for="item-review-rating">Rating (1-5)</label>
-                        <input class="input" id="item-review-rating" type="number" name="rating" min="1" max="5" required>
-                    </div>
-
-                    <div class="stack stack--sm">
-                        <label for="item-review-comment">Ulasan</label>
-                        <textarea class="input" id="item-review-comment" name="comment" rows="3"
-                                  placeholder="Ceritakan pengalamanmu menyewa barang ini..."></textarea>
-                    </div>
-
-                    <div class="row">
-                        <button type="submit" class="btn btn--primary">Kirim Ulasan</button>
-                        <span id="item-review-message" class="text-sm text-muted"></span>
-                    </div>
-                </form>
-            {% else %}
-                <div class="card">
-                    <p><a href="{% url 'user:login' %}">Masuk</a> untuk menulis ulasan.</p>
-                </div>
-            {% endif %}
-        {% endif %}
-
         <div id="item-review-list" class="grid"></div>
     </div>
 </section>
@@ -44,13 +13,11 @@
 (() => {
     const sectionEl = document.getElementById('item-reviews');
     const jsonUrl = sectionEl.dataset.jsonUrl;
-    const createUrl = sectionEl.dataset.createUrl;
     const showItemName = sectionEl.dataset.showItemName === 'true';
     const csrfToken = '{{ csrf_token }}';
 
     const listEl = document.getElementById('item-review-list');
     const summaryEl = document.getElementById('item-review-summary');
-    const formEl = document.getElementById('item-review-form');
 
     function makeEl(tag, className, text) {
         const el = document.createElement(tag);
@@ -95,7 +62,7 @@
                 const actions = makeEl('div', 'row');
 
                 const editLink = makeEl('a', 'btn', 'Edit');
-                editLink.href = `/review/${review.id}/edit/`;
+                editLink.href = `/review/order/${review.order_id}/`;
 
                 const deleteBtn = makeEl('button', 'btn', 'Hapus');
                 deleteBtn.addEventListener('click', () => deleteReview(review.id));
@@ -116,27 +83,6 @@
             headers: { 'X-CSRFToken': csrfToken },
         });
         if (response.ok) loadReviews();
-    }
-
-    if (formEl) {
-        formEl.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const message = document.getElementById('item-review-message');
-
-            const response = await fetch(createUrl, {
-                method: 'POST',
-                body: new FormData(formEl),
-            });
-
-            if (response.ok) {
-                formEl.reset();
-                message.textContent = 'Ulasan berhasil dikirim!';
-                loadReviews();
-            } else {
-                const data = await response.json();
-                message.textContent = data.error || Object.values(data.errors).flat().join(' ');
-            }
-        });
     }
 
     loadReviews();
