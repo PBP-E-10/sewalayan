@@ -17,10 +17,9 @@ NOMINATIM_HEADERS = {'User-Agent': 'SewalayanApp/1.0 (student project)'}
 
 
 # Helper 
-
+# Melakukan pengecekan apakah request berasal dari Javascript
 def _is_ajax(request):
     return request.headers.get('x-requested-with') == 'XMLHttpRequest'
-
 
 def _parse_decimal(value):
     """Ubah teks harga jadi Decimal, atau None kalau kosong/tidak valid."""
@@ -31,7 +30,7 @@ def _parse_decimal(value):
     except InvalidOperation:
         return None
 
-
+# Mengubah alamat versi teks menjadi koordinat
 def geocode_address(address):
     """Kembalikan (lat, lon) dari Nominatim, atau (None, None) jika gagal."""
     if not address:
@@ -51,9 +50,9 @@ def geocode_address(address):
         pass
     return None, None
 
-
+# Melakukan pemeriksaan apakah item lolos sistem skor penilaian
 def _check_eligible(form, item):
-    """Tolak barang yang gugur di syarat mutlak (knock-out) penilaian."""
+    """Tolak barang yang gugur di syarat penilaian."""
     if not is_eligible(item):
         form.add_error(
             None,
@@ -64,8 +63,7 @@ def _check_eligible(form, item):
     return True
 
 
-# ------------------------------------------------------------------ views ---
-
+# Menampilkan katalog
 def item_list(request):
     categories = Category.objects.all()
     return render(request, 'item/item_list.html', {'categories': categories})
@@ -111,7 +109,7 @@ def get_items_json(request):
 
     return JsonResponse(data, safe=False)
 
-
+# Menampilkan detail barang (tanpa login pun berfungsi)
 def item_detail(request, pk):
     item = get_object_or_404(Item.objects.select_related('owner', 'category'), pk=pk)
     return render(request, 'item/item_detail.html', {'item': item})
