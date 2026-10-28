@@ -62,7 +62,7 @@
                 const actions = makeEl('div', 'row');
 
                 const editLink = makeEl('a', 'btn', 'Edit');
-                editLink.href = `/review/${review.id}/edit/`;
+                editLink.href = `/review/order/${review.order_id}/`;
 
                 const deleteBtn = makeEl('button', 'btn', 'Hapus');
                 deleteBtn.addEventListener('click', () => deleteReview(review.id));

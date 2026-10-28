@@ -12,16 +12,26 @@ def show_review(request):
     return render(request, 'review/review_list.html')
 
 @login_required(login_url='user:login')
-def edit_review(request, id):
-    review = get_object_or_404(Review, pk=id, reviewer=request.user)
+def review_order(request, order_id):
+    order = get_object_or_404(Order.objects.select_related('item'), id=order_id, buyer=request.user)
+    review = Review.objects.filter(order=order).first()
+
+    if review is None and order.status != 'finished':
+        return redirect('order:detail', order_id=order.id)
+
     form = ReviewForm(request.POST or None, instance=review)
 
     if request.method == "POST" and form.is_valid():
-        form.save()
-        return redirect('review:show')
+        review = form.save(commit=False)
+        review.reviewer = request.user
+        review.order = order
+        review.save()
+        return redirect('order:detail', order_id=order.id)
 
     context = {
         'form': form,
+        'order': order,
+        'is_edit': review is not None,
     }
     return render(request, 'review/review_form.html', context)
 
@@ -36,6 +46,7 @@ def show_review_json(request):
         {
             'id': review.id,
             'reviewer': review.reviewer.username if review.reviewer else 'Anonim',
+            'order_id': str(review.order_id) if review.order_id else None,
             'item_id': review.order.item_id if review.order else None,
             'item': review.order.item.name if review.order else '-',
             'rating': review.rating,
@@ -46,30 +57,6 @@ def show_review_json(request):
         for review in reviews
     ]
     return JsonResponse(data, safe=False)
-
-@require_POST
-def create_review_ajax(request, order_id):
-    if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Kamu harus login dulu.'}, status=401)
-
-    order = get_object_or_404(Order, id=order_id)
-
-    if order.buyer != request.user:
-        return JsonResponse({'error': 'Hanya penyewa yang bisa mereview order ini'}, status=403)
-    if order.status != 'finished':
-        return JsonResponse({'error': 'Review baru bisa ditulis setelah sewa selesai.'}, status=400)
-    if Review.objects.filter(order=order).exists():
-        return JsonResponse({'error': 'Order ini sudah kamu review.'}, status=400)
-
-    form = ReviewForm(request.POST)
-    if not form.is_valid():
-        return JsonResponse({'errors': form.errors}, status=400)
-
-    review = form.save(commit=False)
-    review.reviewer = request.user
-    review.order = order
-    review.save()
-    return JsonResponse({'id': review.id}, status=201)
 
 @require_POST
 def delete_review_ajax(request, id):
