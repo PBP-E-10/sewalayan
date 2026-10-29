@@ -6,5 +6,6 @@ app_name = 'order'
 urlpatterns = [
     path('', show_order, name="show"),
     path('rental', show_rental, name="rental"),
+    path('request', show_request, name="request"),
     path('details/<uuid:order_id>/', show_order_details, name="detail")
 ]
