@@ -21,7 +21,6 @@
             <p>Penyewa: {{ request.buyer }}</p>
             <p>Ambil: {{ request.taken_at_fmt }}</p>
             <p>Kembali: {{ request.returned_at_fmt }}</p>
-            <a href="{% url 'order:accept' order %}"
         </article>
         {% empty %}
         <p>Tidak ada permintaan sewa terbaru.</p>
