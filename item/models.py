@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+
+from .grading import is_eligible
 
 
 class Category(models.Model):
@@ -45,3 +48,11 @@ class Item(models.Model):
 
     def __str__(self):
         return self.name
+
+    def clean(self):
+        # Dipakai ModelForm dan admin: barang yang gugur syarat mutlak tidak lolos validasi
+        if not is_eligible(self):
+            raise ValidationError(
+                "Barang dengan kondisi ini tidak layak disewakan. "
+                "Periksa kembali skor Keamanan, Fungsi, dan Kebersihan."
+            )

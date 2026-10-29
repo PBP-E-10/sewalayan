@@ -6,14 +6,16 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_GET
 
 from .forms import ItemForm
-from .grading import calculate_condition_grade, is_eligible
+from .grading import NOT_ELIGIBLE_GRADE, calculate_condition_grade, is_eligible
 from .models import Category, Item
 
 LOGIN_URL = 'user:login'
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
 NOMINATIM_HEADERS = {'User-Agent': 'SewalayanApp/1.0 (student project)'}
+MAX_FILTER_LENGTH = 100 
 
 
 # Helper 
@@ -26,9 +28,10 @@ def _parse_decimal(value):
     if not value:
         return None
     try:
-        return Decimal(value)
+        number = Decimal(value)
     except InvalidOperation:
         return None
+    return number if number.is_finite() else None
 
 # Mengubah alamat versi teks menjadi koordinat
 def geocode_address(address):
@@ -69,19 +72,24 @@ def item_list(request):
     return render(request, 'item/item_list.html', {'categories': categories})
 
 
+@require_GET
 def get_items_json(request):
-    query = request.GET.get("q", "").strip()
+    query = request.GET.get("q", "").strip()[:MAX_FILTER_LENGTH]
     category = request.GET.get("category", "").strip()
-    grade = request.GET.get("grade", "").strip()
-    location = request.GET.get("location", "").strip()
+    grade = request.GET.get("grade", "").strip()[:MAX_FILTER_LENGTH]
+    location = request.GET.get("location", "").strip()[:MAX_FILTER_LENGTH]
     min_price = _parse_decimal(request.GET.get("min_price", "").strip())
     max_price = _parse_decimal(request.GET.get("max_price", "").strip())
 
-    items = Item.objects.select_related('category').order_by('-created_at')
+    items = (
+        Item.objects.select_related('category')
+        .exclude(condition_grade=NOT_ELIGIBLE_GRADE)
+        .order_by('-created_at')
+    )
 
     if query:
         items = items.filter(Q(name__icontains=query) | Q(description__icontains=query))
-    if category.isdigit():
+    if category.isascii() and category.isdigit():
         items = items.filter(category__id=int(category))
     if min_price is not None:
         items = items.filter(price_per_day__gte=min_price)
