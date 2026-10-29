@@ -9,12 +9,21 @@ from order.models import Order
 def show_order(request):
     user = get_object_or_404(User, id=request.user.id)
     rents = user.rents.all()
-    items = user.items.all()
     context = {
         "rents": rents,
-        "items": items,
     }
     return render(request, "order/index.html", context)
+
+
+@login_required(login_url="user:login")
+def show_rental(request):
+    user = get_object_or_404(User, id=request.user.id)
+    items = user.items.all()
+    context = {
+        "items": items,
+    }
+
+    return render(request, "order/rental.html", context)
 
 
 @login_required(login_url="user:login")
