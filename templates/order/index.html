@@ -13,19 +13,17 @@
     <div class="grid grid--lg">
 
         {% for rent in rents %}
-        <div class="card stack stack--sm">
+        <article class="card stack stack--sm">
+            <h3>{{ rent.item.name }}</h3>
+            <p>{{ rent.status_id }}</p>
+            <p>Pemilik: {{ rent.item.owner }}</p>
+            <p>Ambil: {{ rent.taken_at_fmt }}</p>
+            <p>Kembali: {{ rent.returned_at_fmt }}</p>
             <div class="row row--between">
-                <h3>{{ rent.item.name }}</h3>
-            </div>
-            <div class="stack stack--sm">
-                <p class="text-sm"><span class="text-muted">Pemilik:</span> {{ rent.item.owner }}</p>
-                <p class="text-sm"><span class="text-muted">Ambil:</span> {{ rent.taken_at }}</p>
-                <p class="text-sm"><span class="text-muted">Kembali:</span> {{ rent.returned_at }}</p>
-            </div>
-            <div class="row">
+                <strong class="text-lg">Rp{{ rent.purchase_price|floatformat:'0g' }}<span class="text-sm text-muted">/hari</span></strong>
                 <a href="{%  url 'order:detail' rent.id %}" class="btn btn--primary">Detail</a>
             </div>
-        </div>
+        </article>
         {% empty %}
         <p>Mulai sewa barang sekarang!</p>
         {% endfor %}
@@ -41,17 +39,14 @@
         {% for item in items %}
         <div class="card stack stack--sm">
             <h3>{{ item.name }}</h3>
-            <div class="stack stack--sm">
-                <p class="text-sm">Ditambahkan pada: {{ item.created_at }}</p>
-                <p class="text-sm">Harga/Hari: Rp{{ item.price_per_day }}</p>
-            </div>
-            <div class="row">
-                <!-- TODO: tambah href ke url penampilan item -->
-                <a class="btn btn--primary">Detail</a>
+            <p>Ditambahkan pada {{ item.created_at|date:"d/m/Y H:i" }}</p>
+            <div class="row row--between">
+                <strong class="text-lg">Rp{{ item.price_per_day|floatformat:'0g' }}<span class="text-sm text-muted">/hari</span></strong>
+                <a href="{%  url 'item:detail' item.id %}" class="btn btn--primary">Detail</a>
             </div>
         </div>
         {% empty %}
-        <p>Mulai menyewa barang sekarang!</p>
+        <p>Mulai menyewakan barang sekarang!</p>
         {% endfor %}
 
     </div>
