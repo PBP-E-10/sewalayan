@@ -77,7 +77,7 @@ class LoginLogoutTests(TestCase):
             "password": PASSWORD,
         })
         self.assertRedirects(
-            response, reverse("item:show"), fetch_redirect_response=False,
+            response, reverse("item:list"), fetch_redirect_response=False,
         )
         self.assertIn("_auth_user_id", self.client.session)
 

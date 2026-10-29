@@ -43,7 +43,7 @@ def login_user(request):
     form = LoginForm(request, data=request.POST or None)
     if request.method == "POST" and form.is_valid():
         login(request, form.get_user())
-        return redirect("item:show")
+        return redirect("item:list")
     return render(request, "user/login.html", {"form": form})
 
 def logout_user(request):
