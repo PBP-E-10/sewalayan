@@ -7,10 +7,12 @@
 {% block content %}
 <h1>Kelola Penyewaan</h1>
 
-<section class="section container-padding">
+{% include 'order/bar.html' with mode='rent' %}
+
+<section class="section">
     <h2 class="section__title">Sewaan</h2>
 
-    <div class="grid grid--lg">
+    <div class="stack">
 
         {% for rent in rents %}
         <article class="card stack stack--sm">
@@ -26,27 +28,6 @@
         </article>
         {% empty %}
         <p>Mulai sewa barang sekarang!</p>
-        {% endfor %}
-
-    </div>
-</section>
-
-<section class="section">
-    <h2 class="section__title">Disewakan</h2>
-
-    <div class="grid grid--lg">
-
-        {% for item in items %}
-        <div class="card stack stack--sm">
-            <h3>{{ item.name }}</h3>
-            <p>Ditambahkan pada {{ item.created_at|date:"d/m/Y H:i" }}</p>
-            <div class="row row--between">
-                <strong class="text-lg">Rp{{ item.price_per_day|floatformat:'0g' }}<span class="text-sm text-muted">/hari</span></strong>
-                <a href="{%  url 'item:detail' item.id %}" class="btn btn--primary">Detail</a>
-            </div>
-        </div>
-        {% empty %}
-        <p>Mulai menyewakan barang sekarang!</p>
         {% endfor %}
 
     </div>
