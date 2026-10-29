@@ -25,7 +25,7 @@
             <form id="item-search-form" class="stack">
 
                 <div class="row">
-                    <input type="search" id="search-input" name="q" class="input" style="flex: 1;"
+                    <input type="search" id="search-input" name="q" class="input flex-1"
                            placeholder="Cari berdasarkan nama atau deskripsi barang..." autocomplete="off">
                     <button type="submit" class="btn">Cari</button>
                 </div>
@@ -50,19 +50,19 @@
                     <input type="number" name="max_price" min="0" class="input" placeholder="Harga maks (Rp)">
                     <input type="text" name="location" class="input" placeholder="Lokasi (mis. Depok)" autocomplete="off">
 
-                    <button type="reset" class="btn">Reset</button>
+                    <button type="reset" class="btn btn--light">Reset</button>
                 </div>
 
             </form>
         </div>
 
         <!-- STATE disembunyikan/ditampilkan lewat atribut hidden -->
-        <div style="text-align: center;">
+        <div class="text-center">
             <div id="loading" hidden>
                 <p class="text-muted">Memuat daftar barang Sewalayan...</p>
             </div>
             <div id="error" hidden>
-                <p style="color: #B42318;">Gagal memuat data barang dari server. Silakan coba beberapa saat lagi.</p>
+                <p class="text-danger">Gagal memuat data barang dari server. Silakan coba beberapa saat lagi.</p>
             </div>
             <div id="empty" hidden>
                 <h3>Belum ada barang ditemukan</h3>
@@ -125,7 +125,7 @@
         article.className = 'card stack stack--sm';
 
         const imageHtml = fields.image
-            ? `<img src="${escapeHtml(fields.image)}" alt="Foto ${escapeHtml(fields.name)}" style="width: 100%; height: 11rem; object-fit: cover; border-radius: var(--radius);">`
+            ? `<img src="${escapeHtml(fields.image)}" alt="Foto ${escapeHtml(fields.name)}" class="item-card__image">`
             : '';
 
         article.innerHTML = `
@@ -137,9 +137,9 @@
             <h3>${escapeHtml(fields.name)}</h3>
             <p>${escapeHtml(fields.description)}</p>
             <p class="text-sm">📍 ${escapeHtml(fields.location || 'Lokasi tidak diatur')}</p>
-            <div class="row row--between" style="margin-top: auto;">
+            <div class="row row--between mt-auto">
                 <strong class="text-lg">Rp${formatRupiah(fields.price_per_day)} <span class="text-sm text-muted">/hari</span></strong>
-                <a href="${escapeHtml(detailUrl)}" class="btn">Lihat Detail</a>
+                <a href="${escapeHtml(detailUrl)}" class="btn btn--primary">Lihat Detail</a>
             </div>
         `;
         return article;
@@ -189,7 +189,6 @@
         }
     }
 
-   
     searchForm.addEventListener('input', function () {
         clearTimeout(searchDebounceTimer);
         searchDebounceTimer = setTimeout(fetchItems, SEARCH_DEBOUNCE_DELAY);

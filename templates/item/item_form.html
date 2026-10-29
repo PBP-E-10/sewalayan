@@ -20,7 +20,7 @@
                 {% csrf_token %}
 
                 {% for error in form.non_field_errors %}
-                    <p style="color: #B42318;">{{ error }}</p>
+                    <p class="text-danger">{{ error }}</p>
                 {% endfor %}
 
                 <!-- Informasi umum -->
@@ -39,7 +39,7 @@
                             <div><label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label></div>
                             {{ field }}
                             {% for error in field.errors %}
-                                <p class="text-sm" style="color: #B42318;">{{ error }}</p>
+                                <p class="text-sm text-danger">{{ error }}</p>
                             {% endfor %}
                         </div>
 
@@ -51,7 +51,7 @@
                                 <small class="text-muted">{{ field.help_text }}</small>
                             {% endif %}
                             {% for error in field.errors %}
-                                <p class="text-sm" style="color: #B42318;">{{ error }}</p>
+                                <p class="text-sm text-danger">{{ error }}</p>
                             {% endfor %}
                         </div>
                     {% endif %}
@@ -70,7 +70,7 @@
                                 <small class="text-muted">{{ field.help_text }}</small>
                             {% endif %}
                             {% for error in field.errors %}
-                                <p class="text-sm" style="color: #B42318;">{{ error }}</p>
+                                <p class="text-sm text-danger">{{ error }}</p>
                             {% endfor %}
                         </div>
                     {% endfor %}
