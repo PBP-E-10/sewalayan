@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 import requests
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 
@@ -66,6 +67,23 @@ class ItemTest(TestCase):
 
         self.assertEqual(Item.objects.count(), 0)
 
+    def test_model_clean_rejects_not_eligible_item(self):
+        item = Item(
+            owner=self.owner, name="Rusak", description="Tidak aman",
+            price_per_day=1000, location="Depok", safety_score=1,
+        )
+
+        with self.assertRaises(ValidationError):
+            item.full_clean()
+
+    def test_model_clean_accepts_eligible_item(self):
+        item = Item(
+            owner=self.owner, name="Bagus", description="Aman",
+            price_per_day=1000, location="Depok",
+        )
+
+        item.full_clean()
+
     # Grading 
 
     def test_condition_grade_rules(self):
@@ -111,7 +129,7 @@ class ItemTest(TestCase):
         self.client.force_login(self.owner)
         self.assertContains(self.client.get(reverse("item:list")), create_url)
 
-    # API json 
+    # API json
 
     def test_get_items_json(self):
         response = self.client.get(reverse("item:get_json"))
@@ -153,7 +171,33 @@ class ItemTest(TestCase):
 
         self.assertEqual(names, ["Kamera Mirrorless"])
 
-    # Detail 
+    def test_get_items_json_hides_not_eligible_items(self):
+        Item.objects.create(
+            owner=self.owner, name="Barang Lama", description="Data lama",
+            price_per_day=Decimal("1000"), location="Depok",
+            condition_grade=NOT_ELIGIBLE_GRADE,
+        )
+
+        self.assertEqual(self.json_names(), ["Kamera Mirrorless"])
+
+    def test_get_items_json_only_accepts_get(self):
+        response = self.client.post(reverse("item:get_json"))
+
+        self.assertEqual(response.status_code, 405)
+
+    def test_get_items_json_ignores_special_decimal_values(self):
+        for value in ["NaN", "sNaN", "Infinity", "-Infinity"]:
+            with self.subTest(value=value):
+                names = self.json_names(min_price=value, max_price=value)
+                self.assertEqual(names, ["Kamera Mirrorless"])
+
+    def test_get_items_json_ignores_non_ascii_category(self):
+        self.assertEqual(self.json_names(category="²"), ["Kamera Mirrorless"])
+
+    def test_get_items_json_with_very_long_keyword(self):
+        self.assertEqual(self.json_names(q="a" * 100000), [])
+
+    # Detail
 
     def test_item_detail_page(self):
         response = self.client.get(reverse("item:detail", args=[self.item.pk]))
@@ -200,7 +244,7 @@ class ItemTest(TestCase):
         self.assertContains(response, update_url)
         self.assertContains(response, delete_url)
 
-    # Create
+    # -------------------------------------------------------------- create ---
 
     def test_create_requires_login(self):
         create_url = reverse("item:create")
@@ -283,7 +327,7 @@ class ItemTest(TestCase):
         self.assertIn("price_per_day", response.json()["errors"])
         self.assertEqual(Item.objects.count(), 1)
 
-    # Update
+    # Update 
 
     def test_update_requires_login(self):
         update_url = reverse("item:update", args=[self.item.pk])
@@ -362,7 +406,7 @@ class ItemTest(TestCase):
             fetch_redirect_response=False,
         )
         self.assertTrue(Item.objects.filter(pk=self.item.pk).exists())
-        
+
     def test_delete_item_by_owner(self):
         self.client.force_login(self.owner)
         response = self.client.post(reverse("item:delete", args=[self.item.pk]))
