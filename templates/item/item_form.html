@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block meta %}
+<title>{{ action }} Barang - Sewalayan</title>
+{% endblock %}
+
+{% block content %}
+<div class="container container--narrow container-padding">
+    <section class="section stack stack--lg">
+
+        <div class="stack stack--sm">
+            <p class="text-sm text-muted">Manajemen Sewalayan</p>
+            <h1>{{ action }} Barang</h1>
+            <p class="text-muted">Isi formulir dan penilaian indikator objektif di bawah ini secara jujur.</p>
+        </div>
+
+        <div class="card">
+            <form method="POST" enctype="multipart/form-data" class="stack">
+                {% csrf_token %}
+
+                {% for error in form.non_field_errors %}
+                    <p class="text-danger">{{ error }}</p>
+                {% endfor %}
+
+                <!-- Informasi umum -->
+                <h2 class="section__title">Informasi Umum Barang</h2>
+
+                {% for field in form.general_fields %}
+                    {% if field.widget_type == 'checkbox' %}
+                        <!-- Checkbox: .row (flex row) supaya tidak melebar -->
+                        <label for="{{ field.id_for_label }}" class="row">
+                            {{ field }} <strong>{{ field.label }}</strong>
+                        </label>
+
+                    {% elif field.widget_type == 'clearablefileinput' or field.widget_type == 'fileinput' %}
+                        <!-- Upload gambar: bungkus biasa (bukan .stack) agar checkbox "Clear" tidak melebar -->
+                        <div>
+                            <div><label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label></div>
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <p class="text-sm text-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                    {% else %}
+                        <div class="stack stack--sm">
+                            <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <p class="text-sm text-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Kuesioner penilaian objektif -->
+                <h2 class="section__title">🔍 Penilaian Kondisi Objektif (Skala 1–4)</h2>
+                <p class="text-sm text-muted">Pilih tingkat penilaian yang paling sesuai dengan kondisi fisik dan fungsional barang saat ini.</p>
+
+                <div class="grid">
+                    {% for field in form.score_fields %}
+                        <div class="stack stack--sm">
+                            <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                            {% for error in field.errors %}
+                                <p class="text-sm text-danger">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Tombol -->
+                <div class="row">
+                    <button type="submit" class="btn btn--primary">Simpan Barang</button>
+                    <a href="{% url 'item:list' %}" class="btn">Batal</a>
+                </div>
+
+            </form>
+        </div>
+
+    </section>
+</div>
+{% endblock %}
