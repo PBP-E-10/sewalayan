@@ -17,9 +17,9 @@
                 <p class="text-muted">Disewakan oleh: <strong>{{ item.owner.username }}</strong></p>
             </div>
             {% if item.is_available %}
-                <strong style="color: #4F7A3A;">● Tersedia</strong>
+                <strong class="text-success">● Tersedia</strong>
             {% else %}
-                <strong style="color: #B42318;">● Tidak Tersedia</strong>
+                <strong class="text-danger">● Tidak Tersedia</strong>
             {% endif %}
         </div>
 
@@ -71,7 +71,7 @@
             <p><strong>Alamat:</strong> {{ item.location }}</p>
 
             {% if item.latitude is not None and item.longitude is not None %}
-                <div id="map" style="height: 300px; border-radius: var(--radius); z-index: 1;"></div>
+                <div id="map" class="map-box"></div>
             {% else %}
                 <p>⚠️ Koordinat peta tidak tersedia untuk alamat ini.</p>
             {% endif %}
@@ -85,13 +85,13 @@
                 <form method="post" action="{% url 'item:delete' item.pk %}"
                       onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang ini?');">
                     {% csrf_token %}
-                    <button type="submit" class="btn" style="color: #B42318; border-color: #B42318;">🗑️ Hapus Barang</button>
+                    <button type="submit" class="btn btn--danger">🗑️ Hapus Barang</button>
                 </form>
             {% else %}
                 {% if item.is_available %}
                     <button type="button" class="btn btn--primary" onclick="alert('Fitur pengajuan sewa akan segera hadir!');">🛒 Ajukan Sewa</button>
                 {% else %}
-                    <button type="button" class="btn" disabled style="opacity: 0.6; cursor: not-allowed;">Sedang Disewa</button>
+                    <button type="button" class="btn" disabled>Sedang Disewa</button>
                 {% endif %}
             {% endif %}
             <a href="{% url 'item:list' %}" class="btn">← Kembali ke Katalog</a>
