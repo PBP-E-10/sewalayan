@@ -71,16 +71,15 @@ class LoginLogoutTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "user/login.html")
 
-    def test_login_berhasil_diarahkan_ke_profil_sendiri(self):
+    def test_login_berhasil_diarahkan_ke_katalog(self):
         response = self.client.post(reverse("user:login"), {
             "username": "apel",
             "password": PASSWORD,
-        }, follow=True)
-        self.assertEqual(
-            response.redirect_chain[-1][0],
-            reverse("user:profile_detail", args=[self.profile.id]),
+        })
+        self.assertRedirects(
+            response, reverse("item:show"), fetch_redirect_response=False,
         )
-        self.assertTrue(response.context["user"].is_authenticated)
+        self.assertIn("_auth_user_id", self.client.session)
 
     def test_login_gagal_jika_password_salah(self):
         response = self.client.post(reverse("user:login"), {
