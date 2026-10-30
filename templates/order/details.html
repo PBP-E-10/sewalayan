@@ -5,9 +5,11 @@
 {% endblock %}
 
 {% block content %}
-<section class="section">
+<a href="{% url 'order:show' %}" class="btn">Kelola Penyewaan lain</a>
+
+<section class="section container-padding">
     <h1 class="section__title">Detail Sewaan {{ order.item.name }}</h1>
-    <div class="grid grid--lg">
+    <div class="grid grid--xl">
         <article class="card stack stack--sm">
             <h3>Informasi Barang</h3>
             <p>Disewakan seharga <strong>Rp{{ order.purchase_price|floatformat:'0g' }}/hari</strong> oleh {{ order.item.owner }}</p>

@@ -183,6 +183,10 @@ video {
     --grid-min: 22rem;
 }
 
+.grid--xl {
+    --grid-min: 32rem;
+}
+
 .with-sidebar {
     display: grid;
     gap: var(--space-5);
