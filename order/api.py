@@ -103,3 +103,21 @@ def pay_order(request, order_id):
     order.save()
 
     return JsonResponse({'id': order.id}, status=201)
+
+
+@require_POST
+def pick_up_order(request, order_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Kamu harus login dulu.'}, status=401)
+
+    order = get_object_or_404(Order, id=order_id)
+
+    if request.user != order.buyer:
+        return JsonResponse({'error': 'Halaman tidak ditemukan'}, status=404)
+    if order.status != 'paid':
+        return JsonResponse({'error': 'Order tidak dalam status menunggu pengangkutan barang.'}, status=400)
+
+    order.status = 'picked-up'
+    order.save()
+
+    return JsonResponse({'id': order.id}, status=201)
