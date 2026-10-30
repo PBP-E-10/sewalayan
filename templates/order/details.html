@@ -25,7 +25,9 @@
         <div class="card stack stack--sm">
             <h3>Status Penyewaan</h3>
             <p>{{ order.status_details }}</p>
-            <div id="map" class="map-box"></div>
+            {% if order.status == 'paid' or order.status == 'picked-up' %}
+                <div id="map" class="map-box"></div>
+            {% endif %}
             {% if order.status == 'accepted' %}
             <button 
                 type="button" 
