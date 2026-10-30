@@ -317,6 +317,8 @@
         }
     }
 
-    fetchOrders();
+    {% if user == item.owner %}
+        fetchOrders();
+    {% endif %}
 </script>
 {% endblock %}
