@@ -74,6 +74,8 @@ def accept_order(request, order_id):
     order.save()
 
     item = order.item
+    item.is_available = False
+    item.save()
 
     # Semua permintaan order lain seharusnya ditolak
     other_orders = item.orders.filter(status='requested').exclude(id=order_id)
