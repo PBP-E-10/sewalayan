@@ -26,6 +26,12 @@
     </div>
   </header>
 
+  <div class="alerts" aria-live="polite">
+    {% for message in messages %}
+      <div class="alert alert--{{ message.tags }}" role="alert">{{ message }}</div>
+    {% endfor %}
+  </div>
+
   <main class="layout__main">
     <div class="container container-padding">
         {% block content %}{% endblock %}
@@ -35,6 +41,35 @@
   <footer class="footer">
     <div class="container">© 2026 Sewalayan.</div>
   </footer>
+
+  <script>
+    (function () {
+      const DURATION = 4000; // lama tampil (ms)
+      const container = document.querySelector('.alerts');
+
+      function dismiss(el) {
+        el.classList.add('alert--hide');
+        setTimeout(function () { el.remove(); }, 300);
+      }
+
+      function watch(el) {
+        el.addEventListener('click', function () { dismiss(el); });
+        setTimeout(function () { dismiss(el); }, DURATION);
+      }
+
+      container.querySelectorAll('.alert').forEach(watch);
+
+      // Bisa dipanggil dari JS halaman mana pun: showToast("Tersimpan!", "success")
+      window.showToast = function (text, type) {
+        const el = document.createElement('div');
+        el.className = 'alert alert--' + (type || 'success');
+        el.setAttribute('role', 'alert');
+        el.textContent = text; // textContent: aman dari XSS
+        container.appendChild(el);
+        watch(el);
+      };
+    })();
+  </script>
 </body>
 
 </html>

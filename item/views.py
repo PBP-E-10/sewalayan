@@ -3,11 +3,10 @@ from decimal import Decimal, InvalidOperation
 import requests
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET
-
+from django.db.models import Q
 from .forms import ItemForm
 from .grading import NOT_ELIGIBLE_GRADE, calculate_condition_grade, is_eligible
 from .models import Category, Item
@@ -180,13 +179,31 @@ def item_update(request, pk):
     return render(request, 'item/item_form.html', {'form': form, 'action': 'Edit'})
 
 
+FINISHED_ORDER_STATUS = "finished"
+
+
+def _has_unfinished_orders(item):
+    return item.orders.exclude(status=FINISHED_ORDER_STATUS).exists()
+
+
 @login_required(login_url=LOGIN_URL)
 def item_delete(request, pk):
     item = get_object_or_404(Item, pk=pk)
 
-    if request.method == "POST" and item.owner == request.user:
-        item.delete()
-        messages.success(request, "Barang berhasil dihapus!")
-        return redirect('item:list')
+    if request.method != "POST":
+        return redirect('item:detail', pk=pk)
 
-    return redirect('item:detail', pk=pk)
+    if item.owner != request.user:
+        messages.error(request, "Kamu tidak punya izin untuk menghapus barang ini.")
+        return redirect('item:detail', pk=pk)
+
+    if _has_unfinished_orders(item):
+        messages.error(
+            request,
+            "Barang tidak bisa dihapus karena masih ada penyewaan yang belum selesai.",
+        )
+        return redirect('item:detail', pk=pk)
+
+    item.delete()
+    messages.success(request, "Barang berhasil dihapus!")
+    return redirect('item:list')

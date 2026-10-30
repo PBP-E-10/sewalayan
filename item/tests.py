@@ -1,16 +1,23 @@
+import shutil
+import tempfile
+from datetime import timedelta
 from decimal import Decimal
+from io import StringIO
 from unittest.mock import MagicMock, patch
 
 import requests
 from django.contrib.auth.models import User
 from django.contrib.messages import get_messages
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.core.management import call_command
+from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from item.grading import NOT_ELIGIBLE_GRADE, calculate_condition_grade, is_eligible
 from item.models import Category, Item
-from item.views import geocode_address
+from item.views import _has_unfinished_orders, geocode_address
+from order.models import Order
 
 AJAX = {"HTTP_X_REQUESTED_WITH": "XMLHttpRequest"}
 
@@ -46,12 +53,19 @@ class ItemTest(TestCase):
         data.update(overrides)
         return data
 
+    def make_order(self, status):
+        return Order.objects.create(
+            item=self.item, buyer=self.other_user, status=status,
+            purchase_price=Decimal("150000"), taken_at=timezone.now(),
+            returned_at=timezone.now() + timedelta(days=3),
+        )
+
     def json_names(self, **params):
         response = self.client.get(reverse("item:get_json"), params)
         self.assertEqual(response.status_code, 200)
         return [row["fields"]["name"] for row in response.json()]
 
-    # Model 
+    # ---------------------------------------------------------------- model ---
 
     def test_item_model(self):
         self.assertEqual(str(self.item), "Kamera Mirrorless")
@@ -84,7 +98,7 @@ class ItemTest(TestCase):
 
         item.full_clean()
 
-    # Grading 
+    # -------------------------------------------------------------- grading ---
 
     def test_condition_grade_rules(self):
         rules = [
@@ -111,7 +125,7 @@ class ItemTest(TestCase):
 
         self.assertEqual(calculate_condition_grade(item), NOT_ELIGIBLE_GRADE)
 
-    # Katalog 
+    # ------------------------------------------------------------- katalog ---
 
     def test_item_list_page_is_accessible(self):
         response = self.client.get(reverse("item:list"))
@@ -129,7 +143,7 @@ class ItemTest(TestCase):
         self.client.force_login(self.owner)
         self.assertContains(self.client.get(reverse("item:list")), create_url)
 
-    # API json
+    # ------------------------------------------------------------ API json ---
 
     def test_get_items_json(self):
         response = self.client.get(reverse("item:get_json"))
@@ -197,7 +211,7 @@ class ItemTest(TestCase):
     def test_get_items_json_with_very_long_keyword(self):
         self.assertEqual(self.json_names(q="a" * 100000), [])
 
-    # Detail
+    # -------------------------------------------------------------- detail ---
 
     def test_item_detail_page(self):
         response = self.client.get(reverse("item:detail", args=[self.item.pk]))
@@ -207,6 +221,40 @@ class ItemTest(TestCase):
         self.assertContains(response, self.item.name)
         self.assertContains(response, "budi")
         self.assertContains(response, "● Tersedia")
+
+    def test_item_is_rented_only_for_active_orders(self):
+        for status in ("requested", "finished"):
+            with self.subTest(status=status):
+                order = self.make_order(status)
+                self.assertFalse(self.item.is_rented)
+                order.delete()
+        for status in ("accepted", "paid", "picked-up"):
+            with self.subTest(status=status):
+                order = self.make_order(status)
+                self.assertTrue(self.item.is_rented)
+                order.delete()
+
+    def test_detail_shows_apply_button_to_other_user(self):
+        self.client.force_login(self.other_user)
+        response = self.client.get(reverse("item:detail", args=[self.item.pk]))
+
+        self.assertContains(response, "Ajukan Sewa")
+        self.assertContains(response, reverse("order:create", args=[self.item.pk]))
+
+    def test_detail_shows_rented_label_when_order_is_active(self):
+        self.make_order("paid")
+        self.client.force_login(self.other_user)
+        response = self.client.get(reverse("item:detail", args=[self.item.pk]))
+
+        self.assertContains(response, "Sedang Disewa")
+        self.assertNotContains(response, "Ajukan Sewa")
+
+    def test_detail_shows_apply_button_when_only_finished_orders(self):
+        self.make_order("finished")
+        self.client.force_login(self.other_user)
+        response = self.client.get(reverse("item:detail", args=[self.item.pk]))
+
+        self.assertContains(response, "Ajukan Sewa")
 
     def test_nonexistent_item_returns_404(self):
         response = self.client.get(reverse("item:detail", args=[9999]))
@@ -219,7 +267,7 @@ class ItemTest(TestCase):
         response = self.client.get(reverse("item:detail", args=[self.item.pk]))
 
         self.assertContains(response, "Tidak Tersedia")
-        self.assertContains(response, "Sedang Disewa")
+        self.assertNotContains(response, "Ajukan Sewa")
 
     def test_map_only_shown_with_coordinates(self):
         url = reverse("item:detail", args=[self.item.pk])
@@ -327,7 +375,7 @@ class ItemTest(TestCase):
         self.assertIn("price_per_day", response.json()["errors"])
         self.assertEqual(Item.objects.count(), 1)
 
-    # Update 
+    # -------------------------------------------------------------- update ---
 
     def test_update_requires_login(self):
         update_url = reverse("item:update", args=[self.item.pk])
@@ -395,7 +443,7 @@ class ItemTest(TestCase):
         self.assertContains(response, "tidak layak disewakan")
         self.assertEqual(self.item.name, "Kamera Mirrorless")
 
-    # Delete 
+    # -------------------------------------------------------------- delete ---
 
     def test_delete_requires_login(self):
         delete_url = reverse("item:delete", args=[self.item.pk])
@@ -416,6 +464,37 @@ class ItemTest(TestCase):
         self.assertEqual(messages, ["Barang berhasil dihapus!"])
         self.assertFalse(Item.objects.filter(pk=self.item.pk).exists())
 
+    def test_has_unfinished_orders(self):
+        self.assertFalse(_has_unfinished_orders(self.item))
+
+        self.make_order("finished")
+        self.assertFalse(_has_unfinished_orders(self.item))
+
+        for status in ["requested", "accepted", "paid", "picked-up"]:
+            with self.subTest(status=status):
+                order = self.make_order(status)
+                self.assertTrue(_has_unfinished_orders(self.item))
+                order.delete()
+
+    def test_delete_item_with_unfinished_order_is_blocked(self):
+        order = self.make_order("picked-up")
+        self.client.force_login(self.owner)
+        response = self.client.post(reverse("item:delete", args=[self.item.pk]))
+        messages = [str(message) for message in get_messages(response.wsgi_request)]
+
+        self.assertRedirects(response, reverse("item:detail", args=[self.item.pk]))
+        self.assertEqual(messages, ["Barang tidak bisa dihapus karena masih ada penyewaan yang belum selesai."])
+        self.assertTrue(Item.objects.filter(pk=self.item.pk).exists())
+        self.assertTrue(Order.objects.filter(pk=order.pk).exists())
+
+    def test_delete_item_with_only_finished_orders(self):
+        self.make_order("finished")
+        self.client.force_login(self.owner)
+        response = self.client.post(reverse("item:delete", args=[self.item.pk]))
+
+        self.assertRedirects(response, reverse("item:list"), fetch_redirect_response=False)
+        self.assertFalse(Item.objects.filter(pk=self.item.pk).exists())
+
     def test_delete_item_by_other_user(self):
         self.client.force_login(self.other_user)
         response = self.client.post(reverse("item:delete", args=[self.item.pk]))
@@ -430,7 +509,7 @@ class ItemTest(TestCase):
         self.assertRedirects(response, reverse("item:detail", args=[self.item.pk]))
         self.assertTrue(Item.objects.filter(pk=self.item.pk).exists())
 
-    # Geocode
+    # ------------------------------------------------------------- geocode ---
 
     @patch("item.views.requests.get")
     def test_geocode_address_success(self, mock_get):
@@ -455,3 +534,52 @@ class ItemTest(TestCase):
     def test_geocode_empty_address_does_not_call_api(self, mock_get):
         self.assertEqual(geocode_address(""), (None, None))
         mock_get.assert_not_called()
+
+    # ----------------------------------------------------------- seed_items ---
+
+    def seed(self, *args):
+        # Hasher cepat hanya untuk tes: command ini membuat akun demo dengan password
+        fast_hasher = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+        with override_settings(PASSWORD_HASHERS=fast_hasher):
+            call_command("seed_items", *args, stdout=StringIO())
+
+    def test_seed_items_creates_valid_demo_items(self):
+        self.seed("--count", "8", "--no-images")
+        demo_items = Item.objects.filter(owner__username__startswith="demo_")
+
+        self.assertEqual(demo_items.count(), 8)
+        for item in demo_items:
+            self.assertTrue(is_eligible(item))
+            self.assertNotEqual(item.condition_grade, "")
+            self.assertIsNotNone(item.latitude)
+            self.assertIsNotNone(item.category)
+
+    def test_seed_items_does_not_duplicate_demo_data(self):
+        self.seed("--count", "5", "--no-images")
+        self.seed("--count", "5", "--no-images")
+
+        self.assertEqual(Item.objects.filter(owner__username__startswith="demo_").count(), 5)
+
+    def test_seed_items_clear_recreates_demo_data_only(self):
+        self.seed("--count", "5", "--no-images")
+        self.seed("--clear", "--count", "3", "--no-images")
+
+        self.assertEqual(Item.objects.filter(owner__username__startswith="demo_").count(), 3)
+        self.assertTrue(Item.objects.filter(pk=self.item.pk).exists())
+
+    def test_seed_items_creates_and_clears_images(self):
+        folder = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, folder, ignore_errors=True)
+        with override_settings(MEDIA_ROOT=folder):
+            self.seed("--count", "2")
+            item = Item.objects.filter(owner__username__startswith="demo_").first()
+            self.assertTrue(item.image.storage.exists(item.image.name))
+
+            image_name = item.image.name
+            self.seed("--clear", "--count", "1", "--no-images")
+            self.assertFalse(item.image.storage.exists(image_name))
+
+    def test_seed_items_rejects_zero_count(self):
+        self.seed("--count", "0")
+
+        self.assertFalse(Item.objects.filter(owner__username__startswith="demo_").exists())
