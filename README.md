@@ -13,20 +13,17 @@ Sewalayan adalah platform sewa-menyewa barang antar-pengguna dengan sub-tema Con
 
 Mengelola autentikasi dan profil pengguna, termasuk registrasi, login, logout, serta pembuatan dan pembaruan informasi profil seperti nama, foto, bio, lokasi, dan kontak dengan pembatasan akses sesuai hak pengguna.
 
-
 - Item (Jordan Manaksak Hutahaean - 2506532580)
 
 Mengelola seluruh data barang yang disewakan, mulai dari menambah, melihat, mengubah, hingga menghapus barang. Modul ini juga menyediakan pencarian, filter berdasarkan kategori, harga, kondisi, dan lokasi, serta integrasi OpenStreetMap untuk informasi lokasi barang.
-
 
 - Rental (Faeiz Faiza Fasha - 2506602196)
 
 Mengelola proses penyewaan barang dari pengajuan hingga selesai, termasuk memilih tanggal sewa, menghitung total biaya, melihat riwayat penyewaan, serta mengatur status rental seperti Pending, Accepted, Active, Completed, dan Cancelled.
 
+- Review and Report (Lavida Yuthiana Faizah - 2506605941)
 
-- Review, Report, and Transaction (Lavida Yuthiana Faizah - 2506605941)
-
-Mengelola transaksi penyewaan, konfirmasi pembayaran sederhana, sistem ulasan dan rating setelah rental selesai, serta fitur pelaporan barang atau pengguna yang bermasalah untuk membantu menjaga keamanan dan kepercayaan dalam platform.
+Mengelola sistem ulasan dan pelaporan. Penyewa dapat memberikan rating (1–5) dan ulasan untuk setiap pesanan yang sudah selesai, serta mengubah atau menghapus ulasannya. Ulasan ditampilkan di halaman detail barang beserta rata-rata ratingnya. Pengguna juga dapat melaporkan barang atau pengguna yang bermasalah dari halaman detail pesanan. Barang yang dilaporkan akan dinonaktifkan sementara hingga laporan ditinjau oleh admin, yang dapat menandai laporan, memblokir pengguna terlapor, atau mengaktifkan kembali barang.
 
 ## 🙍🏼‍♂️ Role User
 - User
@@ -42,3 +39,20 @@ Admin bertugas mengelola data platform, memantau dan menangani laporan pengguna,
 - [OpenStreepMap](https://www.openstreetmap.org)
 
 
+## AI DISCLOSURE 
+- Modul Review and Report (Lavida Yuthiana Faizah - 2506605941)
+Alat yang digunakan: Claude Anthropic
+
+Bentuk Penggunaan:
+1. Pembelajaran & penjelasan konsep: memahami struktur app Django (models, views, urls, forms, templates), relasi 'ForeignKey' dan 'OneToOneField', AJAX dengan 'fetch', CSRF.
+2. Menyusun pseudocode: Membantu menyusun pseudocode dan membantu beberapa penyusunan kode modul Review dan Report, desain ulang landing page dan navbar.
+3. Debugging: Membantu membaca dan memperbaiki error (test yang gagal), serta menyelesaikan merge conflict di Git.
+4. Pengecekan: Memeriksa kode sebelum di-push, menjalankan unit test, dan mengecek kompatibilitas dengan modul anggota lain.
+
+Peran saya:
+1. Menentukan alur fitur bersama kelompok (misalnya review hanya bisa ditulis setelah order berstatus finished).
+2. Menerapkan kode ke proyek, menyesuaikannya dengan modul anggota lain, dan mengintegrasikannya lewat Git (branch, pull, request, merge).
+3. Menguji fitur secara manual melalui 'runserver' dan memastikan semua unit test lulus.
+4. Memahami dan dapat menjelaskan setiap bagian kode yang digunakan.
+
+Seluruh kode hasil bantuan AI telah ditinjau, diuji, dan disesuaikan sebelum digabungkan ke branch 'main'.
