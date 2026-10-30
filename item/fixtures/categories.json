@@ -1,0 +1,9 @@
+[
+  {"model": "item.category", "pk": 1, "fields": {"name": "Elektronik", "slug": "elektronik"}},
+  {"model": "item.category", "pk": 2, "fields": {"name": "Kamera & Fotografi", "slug": "kamera-fotografi"}},
+  {"model": "item.category", "pk": 3, "fields": {"name": "Alat Outdoor", "slug": "alat-outdoor"}},
+  {"model": "item.category", "pk": 4, "fields": {"name": "Perlengkapan Pesta", "slug": "perlengkapan-pesta"}},
+  {"model": "item.category", "pk": 5, "fields": {"name": "Alat Musik", "slug": "alat-musik"}},
+  {"model": "item.category", "pk": 6, "fields": {"name": "Perkakas", "slug": "perkakas"}},
+  {"model": "item.category", "pk": 7, "fields": {"name": "Olahraga", "slug": "olahraga"}}
+]
