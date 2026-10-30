@@ -21,7 +21,11 @@ def get_order_json(request):
     else:
         orders = orders.filter(item__owner=request.user)
 
-    if status != 'all':
+    if status == 'all':
+        pass
+    elif status == 'rented':
+        orders = orders.filter(status__in=["accepted", "paid", "picked-up"])
+    else:
         orders = orders.filter(status=status)
 
     data = []
@@ -34,6 +38,7 @@ def get_order_json(request):
                 "owner": order.item.owner.username,
                 "buyer": order.buyer.username,
                 "status": order.status_id,
+                "status_long": order.status_details,
                 "purchase_price": str(order.purchase_price),
                 "created_at": order.created_at.isoformat(),
                 "taken_at": order.taken_at.isoformat(),
