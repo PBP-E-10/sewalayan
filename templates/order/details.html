@@ -1,7 +1,9 @@
 {% extends "base.html" %}
+{% load static l10n %}
 
 {% block meta %}
 <title>Detail Order</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 {% endblock %}
 
 {% block content %}
@@ -15,6 +17,7 @@
             <p>Disewakan seharga <strong>Rp{{ order.purchase_price|floatformat:'0g' }}/hari</strong> oleh {{ order.item.owner }}</p>
             <p>Ambil pada: {{ order.taken_at_fmt }}</p>
             <p>Kembalikan pada: {{ order.returned_at_fmt }}</p>
+            <p>Total Harga: <strong>Rp<span id="total-price-display">0</span></strong></p>
             <div class="row">
             <a href="{% url 'item:detail' order.item.id %}" class="btn btn--primary">Lihat barang</a>
             </div>
@@ -22,16 +25,141 @@
         <div class="card stack stack--sm">
             <h3>Status Penyewaan</h3>
             <p>{{ order.status_details }}</p>
-            <!-- TODO: tambah fungsionalitas berdasarkan status -->
-            <!-- Requested: none -->
-            <!-- Accepted: tambah tombol dan halaman pembayaran -->
-            <!-- Paid: tambah peta untuk ditampilkan -->
-            <!-- Picked-up: none -->
-            <!-- Finished: suruh review jika belum -->
+            {% if order.status == 'paid' or order.status == 'picked-up' %}
+                <div id="map" class="map-box"></div>
+            {% endif %}
+            {% if order.status == 'accepted' %}
+            <button 
+                type="button" 
+                class="btn btn--primary" 
+                onclick="payOrder('{{ order.id }}')">
+                Bayar
+            </button>
+            {% elif order.status == 'paid' %}
+                <button 
+                    type="button" 
+                    class="btn btn--primary" 
+                    onclick="pickUpOrder('{{ order.id }}')">
+                    Barang sudah diambil?
+                </button>
+            {% endif %}
         </div>
 
     </div>
 </section>
+
+{% if order.status == 'paid' or order.status == 'picked-up' %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+    {% if order.item.latitude is not None and order.item.longitude is not None %}
+    (function () {
+        const lat = {{ order.item.latitude|unlocalize }};
+        const lon = {{ order.item.longitude|unlocalize }};
+
+        const map = L.map('map').setView([lat, lon], 15);
+
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+
+        const popup = document.createElement('div');
+        const title = document.createElement('b');
+        title.textContent = "{{ order.item.name|escapejs }}";
+        popup.appendChild(title);
+        popup.appendChild(document.createElement('br'));
+        popup.appendChild(document.createTextNode("{{ order.item.location|escapejs }}"));
+
+        L.marker([lat, lon]).addTo(map).bindPopup(popup).openPopup();
+    })();
+    {% endif %}
+</script>
+{% endif %}
+
+<script>
+    function calculateTotalPrice(priceString, takenAtIso, returnedAtIso) {
+        const cleanPriceString = String(priceString).replace(',', '.');
+        const dailyPrice = Number(cleanPriceString);
+
+        if (Number.isNaN(dailyPrice)) return 0;
+
+        const startDate = new Date(takenAtIso);
+        const endDate = new Date(returnedAtIso);
+
+        const diffInMilliseconds = endDate.getTime() - startDate.getTime();
+
+        const diffInDays = Math.ceil(diffInMilliseconds / (1000 * 60 * 60 * 24));
+
+        const duration = diffInDays > 0 ? diffInDays : 1;
+
+        return dailyPrice * duration;
+    }
+
+    const purchasePrice = "{{ order.purchase_price }}";
+    const takenAt = "{{ order.taken_at.isoformat }}";
+    const returnedAt = "{{ order.returned_at.isoformat }}";
+
+    const totalPrice = calculateTotalPrice(purchasePrice, takenAt, returnedAt);
+
+    document.getElementById("total-price-display").textContent = totalPrice.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function payOrder() {
+        try {
+            const response = await fetch("{% url 'order:api:pay' order.id %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                }
+            });
+
+            if (response.ok === true) {
+                window.location.reload();
+            } else {
+                alert("Gagal melakukan pembayaran.");
+            }
+        } catch (error) {
+            console.error("Error processing payment:", error);
+            alert("Terjadi kesalahan sistem saat mencoba membayar.");
+        }
+    }
+
+    async function pickUpOrder() {
+        try {
+            const response = await fetch("{% url 'order:api:pick-up' order.id %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                }
+            });
+
+            if (response.ok === true) {
+                window.location.reload();
+            } else {
+                alert("Gagal menandakan pick-up.");
+            }
+        } catch (error) {
+            console.error("Error processing pickup", error);
+            alert("Terjadi kesalahan sistem.");
+        }
+    }
+</script>
 
 {% include 'review/_order_review.html' %}
 {% include 'review/_order_report.html' %}

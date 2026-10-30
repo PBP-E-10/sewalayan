@@ -7,17 +7,25 @@ from order.models import Order
 
 @require_GET
 def get_order_json(request):
-    is_buyer = request.GET.get("buyer", "True").lower() == "true"
+    is_buyer = request.GET.get("buyer", "True").strip().lower() == "true"
     status = request.GET.get("status", "all").strip()
+    item_id = request.GET.get("item_id", "-1").strip()
 
     orders = Order.objects.all()
+
+    if item_id != "-1":
+        orders = orders.filter(item__id=item_id)
 
     if is_buyer:
         orders = orders.filter(buyer=request.user)
     else:
         orders = orders.filter(item__owner=request.user)
 
-    if status != 'all':
+    if status == 'all':
+        pass
+    elif status == 'rented':
+        orders = orders.filter(status__in=["accepted", "paid", "picked-up"])
+    else:
         orders = orders.filter(status=status)
 
     data = []
@@ -30,6 +38,7 @@ def get_order_json(request):
                 "owner": order.item.owner.username,
                 "buyer": order.buyer.username,
                 "status": order.status_id,
+                "status_long": order.status_details,
                 "purchase_price": str(order.purchase_price),
                 "created_at": order.created_at.isoformat(),
                 "taken_at": order.taken_at.isoformat(),
@@ -53,7 +62,6 @@ def decline_order(request, order_id):
         return JsonResponse({'error': 'Order tidak dalam status pengajuan.'}, status=400)
 
     order.delete()
-    # TODO: Notify the canceled order to the user
 
     return JsonResponse({'id': order.id}, status=201)
 
@@ -82,6 +90,64 @@ def accept_order(request, order_id):
 
     for order in other_orders:
         order.delete()
-        # TODO: Notify the canceled order to the user
 
     return JsonResponse({'id': order.id}, status=201)
+
+
+@require_POST
+def pay_order(request, order_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Kamu harus login dulu.'}, status=401)
+
+    order = get_object_or_404(Order, id=order_id)
+
+    if request.user != order.buyer:
+        return JsonResponse({'error': 'Halaman tidak ditemukan'}, status=404)
+    if order.status != 'accepted':
+        return JsonResponse({'error': 'Order tidak dalam status menunggu pembayaran.'}, status=400)
+
+    order.status = 'paid'
+    order.save()
+
+    return JsonResponse({'id': order.id}, status=201)
+
+
+@require_POST
+def pick_up_order(request, order_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Kamu harus login dulu.'}, status=401)
+
+    order = get_object_or_404(Order, id=order_id)
+
+    if request.user != order.buyer:
+        return JsonResponse({'error': 'Halaman tidak ditemukan'}, status=404)
+    if order.status != 'paid':
+        return JsonResponse({'error': 'Order tidak dalam status menunggu pengangkutan barang.'}, status=400)
+
+    order.status = 'picked-up'
+    order.save()
+
+    return JsonResponse({'id': order.id}, status=201)
+
+
+@require_POST
+def finish_order(request, order_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Kamu harus login dulu.'}, status=401)
+
+    order = get_object_or_404(Order, id=order_id)
+
+    if request.user != order.item.owner:
+        return JsonResponse({'error': 'Halaman tidak ditemukan'}, status=404)
+    if order.status != 'picked-up':
+        return JsonResponse({'error': 'Order tidak sedang dipakai.'}, status=400)
+
+    order.status = 'finished'
+    order.save()
+
+    item = order.item
+    item.is_available = True
+    item.save()
+
+    return JsonResponse({'id': order.id}, status=201)
+

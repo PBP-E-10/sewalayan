@@ -5,30 +5,21 @@
 {% endblock %}
 
 {% block content %}
-<div class="row row--between">
-    <h1>Kelola Penyewaan</h1>
-    <div class="row container-padding" id="order-tabs">
-        <button 
-            type="button" 
-            class="btn btn--primary" 
-            onclick="handleTabChange(this, true, 'all', 'Sewaan')">
-            Sewaan
-        </button>
+<h1>Kelola Penyewaan</h1>
+<div class="grid grid--sm container-padding" id="order-tabs">
+    <button 
+        type="button" 
+        class="btn btn--primary" 
+        onclick="handleTabChange(this, true, 'all', 'Sewaan')">
+        Sewaan
+    </button>
 
-        <button 
-            type="button" 
-            class="btn" 
-            onclick="handleTabChange(this, false, 'all', 'Disewakan')">
-            Disewakan
-        </button>
-
-        <button 
-            type="button" 
-            class="btn" 
-            onclick="handleTabChange(this, false, 'requested', 'Permintaan')">
-            Permintaan
-        </button>
-    </div>
+    <button 
+        type="button" 
+        class="btn" 
+        onclick="handleTabChange(this, false, 'all', 'Disewakan')">
+        Disewakan
+    </button>
 </div>
 
 <section class="section">
@@ -42,7 +33,7 @@
             <p class="text-danger">Gagal memuat data order dari server. Silakan coba beberapa saat lagi.</p>
         </div>
         <div id="empty" hidden>
-            <h3>Tidak ada data.</h3>
+            <p>Tidak ada data.</p>
         </div>
     </div>
 
@@ -53,8 +44,6 @@
 <script>
     const ORDERS_ENDPOINT = "{% url 'order:api:json' %}";
     const ORDER_DETAIL_URL_TEMPLATE = "{% url 'order:detail' '00000000-0000-0000-0000-000000000000' %}";
-    const ORDER_ACCEPT_URL_TEMPLATE = "{% url 'order:api:accept' '00000000-0000-0000-0000-000000000000' %}";
-    const ORDER_DECLINE_URL_TEMPLATE = "{% url 'order:api:decline' '00000000-0000-0000-0000-000000000000' %}";
     const ITEM_DETAIL_URL_TEMPLATE = "{% url 'item:detail' '0' %}"
 
     let ordersAbortController;
@@ -110,49 +99,7 @@
         return cookieValue;
     }
 
-    async function acceptOrder(orderId) {
-        const acceptUrl = ORDER_ACCEPT_URL_TEMPLATE.replace('00000000-0000-0000-0000-000000000000', `${orderId}`);
-        
-        try {
-            const response = await fetch(acceptUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-
-            if (!response.ok) throw new Error('Gagal menerima permintaan');
-
-            fetchOrders(currentTabState);
-        } catch (error) {
-            console.error('Error accepting order:', error);
-            alert('Gagal menerima pesanan. Silakan coba lagi.');
-        }
-    }
-
-    async function declineOrder(orderId) {
-        const declineUrl = ORDER_DECLINE_URL_TEMPLATE.replace('00000000-0000-0000-0000-000000000000', `${orderId}`);
-        
-        try {
-            const response = await fetch(declineUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-
-            if (!response.ok) throw new Error('Gagal menerima permintaan');
-
-            fetchOrders(currentTabState);
-        } catch (error) {
-            console.error('Error declineing order:', error);
-            alert('Gagal menerima pesanan. Silakan coba lagi.');
-        }
-    }
-
-    function buildOrderCardElement(order, isBuyer, title) {
+    function buildOrderCardElement(order, isBuyer) {
         const fields = order.fields;
 
         let detailUrl = "";
@@ -176,24 +123,10 @@
             partyLabel = `<p>Penyewa: ${escapeHtml(fields.buyer_name || fields.buyer || "—")}</p>`;
         }
 
-        const isRequested = title === "Permintaan";
-
-        let acceptButtonHtml = "";
-        if (isBuyer === false && isRequested === true) {
-            acceptButtonHtml = `<button type="button" class="btn btn--primary" onclick="acceptOrder('${encodeURIComponent(order.id)}')">Terima</button>`;
-        }
-
-        let declineButtonHtml = "";
-        if (isBuyer === false && isRequested === true) {
-            declineButtonHtml = `<button type="button" class="btn btn--danger" onclick="declineOrder('${encodeURIComponent(order.id)}')">Tolak</button>`;
-        }
-
         const article = document.createElement("article");
         article.className = "card stack stack--sm";
 
-        const detailButtonHtml = title == 'Permintaan' 
-            ? `` 
-            : `<a href="${escapeHtml(detailUrl)}" class="btn btn--primary">Detail</a>`
+        const detailButtonHtml = `<a href="${escapeHtml(detailUrl)}" class="btn btn--primary">Detail</a>`
 
         article.innerHTML = `
             <div class="row row--between">
@@ -210,8 +143,6 @@
                     Rp${formatRupiah(fields.purchase_price)} <span class="text-sm text-muted">/hari</span>
                 </strong>
                 <div class="row">
-                    ${acceptButtonHtml}
-                    ${declineButtonHtml}
                     ${detailButtonHtml}
                 </div>
             </div>
@@ -253,7 +184,7 @@
             if (orderData.length === 0) {
                 displayOrdersSection({ showEmpty: true });
             } else {
-                orderData.forEach(order => ordersContainer.appendChild(buildOrderCardElement(order, isBuyer, title)));
+                orderData.forEach(order => ordersContainer.appendChild(buildOrderCardElement(order, isBuyer)));
                 displayOrdersSection({ showContainer: true });
             }
         } catch (error) {
