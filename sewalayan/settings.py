@@ -31,6 +31,8 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'sewalayan-secret-key')
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost',
                  'faeiz-faiza-sewalayan.pws.cs.ui.ac.id']
 
+CSRF_TRUSTED_ORIGINS = ['faeiz-faiza-sewalayan.pws.cs.ui.ac.id']
+
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 DEBUG = not PRODUCTION
 
