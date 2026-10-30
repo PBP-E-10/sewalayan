@@ -29,7 +29,7 @@ def get_order_json(request):
                 "item_id": order.item.id,
                 "owner": order.item.owner.username,
                 "buyer": order.buyer.username,
-                "status": order.status,
+                "status": order.status_id,
                 "purchase_price": str(order.purchase_price),
                 "created_at": order.created_at.isoformat(),
                 "taken_at": order.taken_at.isoformat(),
