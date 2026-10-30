@@ -26,6 +26,7 @@ def get_order_json(request):
             "id": str(order.id),
             "fields": {
                 "item_name": order.item.name,
+                "item_id": order.item.id,
                 "owner": order.item.owner.username,
                 "buyer": order.buyer.username,
                 "status": order.status,
