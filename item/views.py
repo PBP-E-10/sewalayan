@@ -68,8 +68,11 @@ def _check_eligible(form, item):
 # Menampilkan katalog
 def item_list(request):
     categories = Category.objects.all()
-    return render(request, 'item/item_list.html', {'categories': categories})
-
+    context = {
+        'categories': categories,
+        'selected_category': request.GET.get('category', ''),
+    }
+    return render(request, 'item/item_list.html', context)
 
 @require_GET
 def get_items_json(request):
