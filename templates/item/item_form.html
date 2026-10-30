@@ -33,11 +33,16 @@
                             {{ field }} <strong>{{ field.label }}</strong>
                         </label>
 
-                    {% elif field.widget_type == 'clearablefileinput' or field.widget_type == 'fileinput' %}
-                        <!-- Upload gambar: bungkus biasa (bukan .stack) agar checkbox "Clear" tidak melebar -->
-                        <div>
-                            <div><label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label></div>
-                            {{ field }}
+                    {% elif field.widget_type == 'clearablefile' or field.widget_type == 'file' %}
+                        <!-- Upload gambar: pratinjau foto saat ini + pilih file baru (tanpa checkbox hapus) -->
+                        <div class="stack stack--sm">
+                            <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+
+                            {% if form.instance.image %}
+                                <img src="{{ form.instance.image.url }}" alt="Foto saat ini" class="item-card__image">
+                            {% endif %}
+
+                            <input type="file" name="{{ field.html_name }}" id="{{ field.id_for_label }}" accept="image/*">
                             {% for error in field.errors %}
                                 <p class="text-sm text-danger">{{ error }}</p>
                             {% endfor %}

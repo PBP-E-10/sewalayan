@@ -82,16 +82,17 @@
             {% if user == item.owner %}
                 <a href="{% url 'item:update' item.pk %}" class="btn btn--primary">✏️ Edit Barang</a>
 
-                <form method="post" action="{% url 'item:delete' item.pk %}"
-                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang ini?');">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn--danger">🗑️ Hapus Barang</button>
+                <form method="post" action="{% url 'item:delete' item.pk %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn--danger">Hapus</button>
                 </form>
             {% else %}
-                {% if item.is_available %}
+                {% if item.is_rented %}
+                    <button type="button" class="btn" disabled>Sedang Disewa</button>
+                {% elif item.is_available %}
                     <a href="{% url 'order:create' item.id %}" class="btn btn--primary">🛒 Ajukan Sewa</a>
                 {% else %}
-                    <button type="button" class="btn" disabled>Sedang Disewa</button>
+                    <button type="button" class="btn" disabled>Tidak Tersedia</button>
                 {% endif %}
             {% endif %}
             <a href="{% url 'item:list' %}" class="btn">← Kembali ke Katalog</a>
