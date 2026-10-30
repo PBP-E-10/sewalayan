@@ -3,39 +3,95 @@
 {% block meta %}
 <title>Sewalayan | Sewa Barang Antar Pengguna</title>
 <style>
+    /* ---------- HERO ---------- */
     .hero {
-        padding-block: var(--space-6);
-        text-align: center;
+        display: grid;
+        gap: var(--space-5);
+        align-items: center;
+        padding-block: var(--space-4) var(--space-5);
 
-        & .row {
-            justify-content: center;
+        @media (min-width: 52rem) {
+            grid-template-columns: 1.1fr 1fr;
         }
     }
 
     .hero__title {
-        font-size: clamp(var(--text-2xl), 14vw, 5rem);
-        line-height: 1;
-        letter-spacing: -0.03em;
+        font-size: clamp(3rem, 11vw, 5.5rem);
+        line-height: 0.95;
+        letter-spacing: -0.04em;
+
+        & span {
+            color: var(--primary);
+        }
     }
 
     .hero__tagline {
         font-size: var(--text-xl);
-        font-weight: 600;
+        font-weight: 700;
     }
 
     .hero__text {
-        max-width: 60ch;
-        margin-inline: auto;
+        max-width: 50ch;
         font-size: var(--text-lg);
         color: var(--muted);
     }
 
+    /* Kotak kategori di sisi kanan hero */
+    .showcase {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-3);
+        padding: var(--space-4);
+        border-radius: calc(var(--radius) * 2);
+        background: var(--surface-alt);
+    }
+
+    .showcase__tile {
+        display: grid;
+        place-items: center;
+        gap: var(--space-1);
+        aspect-ratio: 1;
+        border-radius: var(--radius);
+        background: var(--bg);
+        font-size: var(--text-sm);
+        font-weight: 600;
+        text-align: center;
+
+        & span {
+            font-size: clamp(1.75rem, 5vw, 2.5rem);
+            line-height: 1;
+        }
+
+        &:nth-child(2),
+        &:nth-child(6) {
+            background: var(--primary);
+        }
+    }
+
+    /* ---------- KEUNGGULAN ---------- */
+    .feature {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+
+    .feature__icon {
+        display: grid;
+        place-items: center;
+        width: 3rem;
+        height: 3rem;
+        border-radius: var(--radius);
+        background: var(--bg);
+        font-size: var(--text-lg);
+    }
+
+    /* ---------- CARA KERJA ---------- */
     .flow {
         display: flex;
         flex-direction: column;
         gap: var(--space-2);
 
-        @media (min-width: 48rem) {
+        @media (min-width: 52rem) {
             flex-direction: row;
         }
     }
@@ -47,7 +103,7 @@
         gap: var(--space-2);
         padding: var(--space-4);
         border-radius: var(--radius);
-        background: var(--surface);
+        border: 1px dashed var(--muted);
 
         & p {
             color: var(--muted);
@@ -61,7 +117,7 @@
         height: var(--space-5);
         border-radius: 50%;
         background: var(--primary);
-        font-weight: 700;
+        font-weight: 800;
     }
 
     .flow__arrow {
@@ -70,8 +126,26 @@
         color: var(--muted);
         transform: rotate(90deg);
 
-        @media (min-width: 48rem) {
+        @media (min-width: 52rem) {
             transform: none;
+        }
+    }
+
+    /* ---------- AJAKAN (CTA) ---------- */
+    .cta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--space-4);
+        padding: var(--space-5);
+        border-radius: calc(var(--radius) * 2);
+        background: var(--surface-alt);
+        color: var(--bg);
+
+        & p {
+            max-width: 45ch;
+            opacity: 0.8;
         }
     }
 </style>
@@ -80,19 +154,60 @@
 {% block content %}
 <div class="stack stack--lg">
 
-    <section class="hero stack">
-        <h1 class="hero__title">Sewalayan</h1>
-        <p class="hero__tagline">Butuh barang? Sewa aja dulu!</p>
-        <p class="hero__text">
-            Mau camping tapi belum punya tenda? Atau pengen foto-foto pakai kamera bagus? Sewa aja dari orang di sekitarmu. 
-            Punya barang yang jarang dipakai? Yuk, sewakan dan dapat penghasilan tambahan!
-        </p>
-        <div class="row">
-            <a class="btn btn--primary" href="/item/">Cari Barang</a>
-            <a class="btn" href="/item/create/">Sewakan Barangmu</a>
+    <!-- HERO -->
+    <section class="hero">
+        <div class="stack">
+            <h1 class="hero__title">Sewa<span>layan</span></h1>
+            <p class="hero__tagline">Butuh barang? Sewa aja dulu!</p>
+            <p class="hero__text">
+                Mau camping tapi belum punya tenda? Pengen foto pakai kamera bagus?
+                Sewa dari orang di sekitarmu, nggak perlu beli. Punya barang yang jarang dipakai?
+                Sewakan dan dapat penghasilan tambahan.
+            </p>
+            <div class="row">
+                <a class="btn btn--primary" href="{% url 'item:list' %}">Cari Barang →</a>
+                <a class="btn" href="{% url 'item:create' %}">Sewakan Barangmu</a>
+            </div>
+        </div>
+
+        <div class="showcase" aria-hidden="true">
+            <div class="showcase__tile"><span>📷</span>Kamera</div>
+            <div class="showcase__tile"><span>⛺</span>Camping</div>
+            <div class="showcase__tile"><span>🎮</span>Gaming</div>
+            <div class="showcase__tile"><span>🎸</span>Musik</div>
+            <div class="showcase__tile"><span>🚲</span>Sepeda</div>
+            <div class="showcase__tile"><span>🧳</span>Travel</div>
         </div>
     </section>
 
+    <!-- KEUNGGULAN -->
+    <section class="section">
+        <h2 class="section__title">Kenapa Sewalayan?</h2>
+        <div class="grid grid--sm">
+            <article class="card feature">
+                <span class="feature__icon" aria-hidden="true">💸</span>
+                <h3>Lebih hemat</h3>
+                <p>Cuma butuh sekali? Sewa aja, nggak perlu keluar uang banyak buat beli.</p>
+            </article>
+            <article class="card feature">
+                <span class="feature__icon" aria-hidden="true">🔍</span>
+                <h3>Kondisi terukur</h3>
+                <p>Setiap barang punya grade otomatis dari 5 indikator kondisi.</p>
+            </article>
+            <article class="card feature">
+                <span class="feature__icon" aria-hidden="true">⭐</span>
+                <h3>Ulasan jujur</h3>
+                <p>Ulasan hanya bisa ditulis oleh penyewa yang sudah selesai menyewa.</p>
+            </article>
+            <article class="card feature">
+                <span class="feature__icon" aria-hidden="true">🛡️</span>
+                <h3>Aman</h3>
+                <p>Ada masalah dengan barang atau pengguna? Laporkan langsung dari pesananmu.</p>
+            </article>
+        </div>
+    </section>
+
+    <!-- CARA KERJA -->
     <section class="section">
         <h2 class="section__title">Cara Kerja</h2>
         <div class="flow">
@@ -111,7 +226,7 @@
             <article class="flow__step">
                 <span class="flow__number">3</span>
                 <h3>Pakai &amp; kembalikan</h3>
-                <p>Gunakan barangnya sesuai kebutuhan dna jangan lupa kembalikan tepat waktu, ya!</p>
+                <p>Gunakan barangnya sesuai kebutuhan dan jangan lupa kembalikan tepat waktu, ya!</p>
             </article>
             <span class="flow__arrow" aria-hidden="true">→</span>
             <article class="flow__step">
@@ -122,28 +237,13 @@
         </div>
     </section>
 
-    <section class="section">
-        <h2 class="section__title">Barang Terbaru</h2>
-
-        {% if latest_items %}
-            <div class="stack">
-                <div class="grid">
-                    {% for item in latest_items %}
-                        <article class="card stack stack--sm">
-                            <h3>{{ item.name }}</h3>
-                            <p>{{ item.description|truncatewords:15 }}</p>
-                            <strong>Rp{{ item.price_per_day|floatformat:0 }}/hari</strong>
-                            <div class="row">
-                                <a class="btn btn--primary" href="/item/{{ item.id }}/">Lihat</a>
-                            </div>
-                        </article>
-                    {% endfor %}
-                </div>
-                <a href="/item/">Lihat semua barang →</a>
-            </div>
-        {% else %}
-            <p class="text-muted">Belum ada barang yang disewakan. Jadilah yang pertama!</p>
-        {% endif %}
+    <!-- AJAKAN -->
+    <section class="cta">
+        <div class="stack stack--sm">
+            <h2>Punya barang yang nganggur?</h2>
+            <p>Daripada cuma disimpan, sewakan aja. Barangmu bermanfaat buat orang lain, kamu dapat penghasilan tambahan.</p>
+        </div>
+        <a class="btn btn--primary" href="{% url 'item:create' %}">Sewakan Sekarang</a>
     </section>
 
 </div>

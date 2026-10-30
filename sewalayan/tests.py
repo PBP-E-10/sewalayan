@@ -1,36 +1,39 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
-from item.models import Item
 
 
 class LandingPageTest(TestCase):
-    def setUp(self):
-        self.owner = User.objects.create_user(username='pemilik', password='pass12345')
-
-    def buat_barang(self, nama):
-        return Item.objects.create(
-            owner=self.owner, name=nama, description='Deskripsi barang',
-            price_per_day=50000, location='Depok',
-        )
-
     def test_landing_page_bisa_dibuka(self):
         response = self.client.get(reverse('landing'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'landing.html')
 
-    def test_landing_page_tanpa_barang(self):
+    def test_landing_page_punya_tombol_ke_katalog_dan_sewakan(self):
         response = self.client.get(reverse('landing'))
-        self.assertContains(response, 'Belum ada barang yang disewakan')
+        self.assertContains(response, reverse('item:list'))
+        self.assertContains(response, reverse('item:create'))
 
-    def test_landing_page_menampilkan_barang_terbaru(self):
-        self.buat_barang('Kamera DSLR')
+    def test_landing_page_tidak_menampilkan_daftar_barang(self):
         response = self.client.get(reverse('landing'))
-        self.assertContains(response, 'Kamera DSLR')
-        self.assertContains(response, 'Rp50000/hari')
+        self.assertNotContains(response, 'Barang Terbaru')
 
-    def test_landing_page_maksimal_enam_barang(self):
-        for i in range(8):
-            self.buat_barang(f'Barang {i}')
+
+class NavbarTest(TestCase):
+    def test_navbar_tamu_ada_masuk_dan_daftar(self):
         response = self.client.get(reverse('landing'))
-        self.assertEqual(len(response.context['latest_items']), 6)
+        self.assertContains(response, reverse('user:login'))
+        self.assertContains(response, reverse('user:register'))
+        self.assertNotContains(response, reverse('order:show'))
+
+    def test_navbar_user_login_ada_pesanan_dan_keluar(self):
+        User.objects.create_user(username='penyewa', password='pass12345')
+        self.client.login(username='penyewa', password='pass12345')
+        response = self.client.get(reverse('landing'))
+        self.assertContains(response, reverse('order:show'))
+        self.assertContains(response, reverse('user:logout'))
+        self.assertContains(response, 'penyewa')
+
+    def test_navbar_menandai_halaman_aktif(self):
+        response = self.client.get(reverse('review:show'))
+        self.assertContains(response, 'aria-current="page">Ulasan')
