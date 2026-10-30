@@ -33,7 +33,7 @@
             <p class="text-danger">Gagal memuat data order dari server. Silakan coba beberapa saat lagi.</p>
         </div>
         <div id="empty" hidden>
-            <h3>Tidak ada data.</h3>
+            <p>Tidak ada data.</p>
         </div>
     </div>
 
@@ -44,8 +44,6 @@
 <script>
     const ORDERS_ENDPOINT = "{% url 'order:api:json' %}";
     const ORDER_DETAIL_URL_TEMPLATE = "{% url 'order:detail' '00000000-0000-0000-0000-000000000000' %}";
-    const ORDER_ACCEPT_URL_TEMPLATE = "{% url 'order:api:accept' '00000000-0000-0000-0000-000000000000' %}";
-    const ORDER_DECLINE_URL_TEMPLATE = "{% url 'order:api:decline' '00000000-0000-0000-0000-000000000000' %}";
     const ITEM_DETAIL_URL_TEMPLATE = "{% url 'item:detail' '0' %}"
 
     let ordersAbortController;
@@ -99,48 +97,6 @@
             }
         }
         return cookieValue;
-    }
-
-    async function acceptOrder(orderId) {
-        const acceptUrl = ORDER_ACCEPT_URL_TEMPLATE.replace('00000000-0000-0000-0000-000000000000', `${orderId}`);
-        
-        try {
-            const response = await fetch(acceptUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-
-            if (!response.ok) throw new Error('Gagal menerima permintaan');
-
-            fetchOrders(currentTabState);
-        } catch (error) {
-            console.error('Error accepting order:', error);
-            alert('Gagal menerima pesanan. Silakan coba lagi.');
-        }
-    }
-
-    async function declineOrder(orderId) {
-        const declineUrl = ORDER_DECLINE_URL_TEMPLATE.replace('00000000-0000-0000-0000-000000000000', `${orderId}`);
-        
-        try {
-            const response = await fetch(declineUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                }
-            });
-
-            if (!response.ok) throw new Error('Gagal menerima permintaan');
-
-            fetchOrders(currentTabState);
-        } catch (error) {
-            console.error('Error declineing order:', error);
-            alert('Gagal menerima pesanan. Silakan coba lagi.');
-        }
     }
 
     function buildOrderCardElement(order, isBuyer) {

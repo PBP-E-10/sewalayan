@@ -99,6 +99,26 @@
         </div>
 
     </section>
+
+    {% if user == item.owner %}
+    <section class="section">
+        <h2 class="section__title">Permintaan</h2>
+        <div class="text-center">
+            <div id="order-loading" hidden>
+                <p class="text-muted">Memuat daftar order...</p>
+            </div>
+            <div id="order-error" hidden>
+                <p class="text-danger">Gagal memuat data order dari server. Silakan coba beberapa saat lagi.</p>
+            </div>
+            <div id="order-empty" hidden>
+                <p class="text-muted">Tidak ada data permintaan di barang ini.</p>
+            </div>
+        </div>
+
+        <div id="order-results" class="stack" hidden>
+        </div>
+    </section>
+    {% endif %}
     {% include 'review/_item_reviews.html' %}
 </div>
 
@@ -127,5 +147,176 @@
         L.marker([lat, lon]).addTo(map).bindPopup(popup).openPopup();
     })();
     {% endif %}
+
+    const ORDERS_ENDPOINT = "{% url 'order:api:json' %}";
+    const ORDER_ACCEPT_URL_TEMPLATE = "{% url 'order:api:accept' '00000000-0000-0000-0000-000000000000' %}";
+    const ORDER_DECLINE_URL_TEMPLATE = "{% url 'order:api:decline' '00000000-0000-0000-0000-000000000000' %}";
+
+    let ordersAbortController;
+    const ordersLoadingState = document.getElementById('order-loading');
+    const ordersErrorState = document.getElementById('order-error');
+    const ordersEmptyState = document.getElementById('order-empty');
+    const ordersContainer = document.getElementById('order-results');
+
+    function displayOrdersSection({ showLoading = false, showError = false, showEmpty = false, showContainer = false }) {
+        if (ordersLoadingState) ordersLoadingState.hidden = !showLoading;
+        if (ordersErrorState) ordersErrorState.hidden = !showError;
+        if (ordersEmptyState) ordersEmptyState.hidden = !showEmpty;
+        if (ordersContainer) ordersContainer.hidden = !showContainer;
+    }
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function formatRupiah(value) {
+        const number = Number(value);
+        if (Number.isNaN(number)) return escapeHtml(value);
+        return number.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+    }
+
+    function formatDate(isoString) {
+        if (!isoString) return '—';
+        const date = new Date(isoString);
+        if (Number.isNaN(date.getTime())) return escapeHtml(isoString);
+        return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    async function acceptOrder(orderId) {
+        const acceptUrl = ORDER_ACCEPT_URL_TEMPLATE.replace('00000000-0000-0000-0000-000000000000', String(orderId));
+        
+        try {
+            const response = await fetch(acceptUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            if (!response.ok) throw new Error('Gagal menerima permintaan');
+
+            // Refresh list after successful action
+            fetchOrders();
+        } catch (error) {
+            console.error('Error accepting order:', error);
+            alert('Gagal menerima pesanan. Silakan coba lagi.');
+        }
+    }
+
+    async function declineOrder(orderId) {
+        const declineUrl = ORDER_DECLINE_URL_TEMPLATE.replace('00000000-0000-0000-0000-000000000000', String(orderId));
+        
+        try {
+            const response = await fetch(declineUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            });
+
+            if (!response.ok) throw new Error('Gagal menolak permintaan');
+
+            // Refresh list after successful action
+            fetchOrders();
+        } catch (error) {
+            console.error('Error declining order:', error);
+            alert('Gagal menolak pesanan. Silakan coba lagi.');
+        }
+    }
+
+    function buildOrderCardElement(order) {
+        const fields = order.fields;
+
+        const partyLabel = `<p>Penyewa: ${escapeHtml(fields.buyer_name || fields.buyer || "—")}</p>`;
+
+        const acceptButtonHtml = `<button type="button" class="btn btn--primary" onclick="acceptOrder('${escapeHtml(order.id)}')">Terima</button>`;
+        const declineButtonHtml = `<button type="button" class="btn btn--danger" onclick="declineOrder('${escapeHtml(order.id)}')">Tolak</button>`;
+
+        const article = document.createElement("article");
+        article.className = "card stack stack--sm";
+
+        article.innerHTML = `
+            <div class="row row--between">
+                <h3>${escapeHtml(fields.item_name)}</h3>
+                <strong>
+                    ${escapeHtml(fields.status)}
+                </strong>
+            </div>
+            ${partyLabel}
+            <p>Ambil: ${formatDate(fields.taken_at)}</p>
+            <p>Kembali: ${formatDate(fields.returned_at)}</p>
+            <div class="row row--between">
+                <strong class="text-lg">
+                    Rp${formatRupiah(fields.purchase_price)} <span class="text-sm text-muted">/hari</span>
+                </strong>
+                <div class="row">
+                    ${acceptButtonHtml}
+                    ${declineButtonHtml}
+                </div>
+            </div>
+        `;
+
+        return article;
+    }
+
+    async function fetchOrders() {
+        if (ordersAbortController) ordersAbortController.abort();
+        ordersAbortController = new AbortController();
+
+        try {
+            displayOrdersSection({ showLoading: true });
+
+            const params = new URLSearchParams({
+                buyer: 'false',
+                status: 'requested',
+                item_id: '{{ item.id }}',
+            });
+
+            const response = await fetch(`${ORDERS_ENDPOINT}?${params.toString()}`, {
+                headers: { 'Accept': 'application/json' },
+                signal: ordersAbortController.signal,
+            });
+
+            if (!response.ok) throw new Error('Gagal memuat data pesanan');
+
+            const orderData = await response.json();
+            ordersContainer.innerHTML = "";
+
+            if (orderData.length === 0) {
+                displayOrdersSection({ showEmpty: true });
+            } else {
+                orderData.forEach(order => ordersContainer.appendChild(buildOrderCardElement(order)));
+                displayOrdersSection({ showContainer: true });
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') return;
+            console.error('Error fetching orders:', error);
+            displayOrdersSection({ showError: true });
+        }
+    }
+
+    fetchOrders();
 </script>
 {% endblock %}

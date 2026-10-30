@@ -7,10 +7,14 @@ from order.models import Order
 
 @require_GET
 def get_order_json(request):
-    is_buyer = request.GET.get("buyer", "True").lower() == "true"
+    is_buyer = request.GET.get("buyer", "True").strip().lower() == "true"
     status = request.GET.get("status", "all").strip()
+    item_id = request.GET.get("item_id", "-1").strip()
 
     orders = Order.objects.all()
+
+    if item_id != "-1":
+        orders = orders.filter(item__id=item_id)
 
     if is_buyer:
         orders = orders.filter(buyer=request.user)
