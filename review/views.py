@@ -3,8 +3,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
 
-from review.models import Review
-from review.forms import ReviewForm
+from review.models import Review, Report
+from review.forms import ReviewForm, ReportForm
 from item.models import Item
 from order.models import Order
 
@@ -73,3 +73,38 @@ def show_item_reviews(request, item_id):
         'item': item,
     }
     return render(request, 'review/review_list.html', context)
+
+@require_POST
+def create_report_ajax(request, order_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Kamu harus login dulu.'}, status=401)
+
+    order = get_object_or_404(Order.objects.select_related('item'), id=order_id)
+
+    if request.user not in (order.buyer, order.item.owner):
+        return JsonResponse({'error': 'Hanya penyewa atau pemilik barang yang bisa melapor.'}, status=403)
+    if Report.objects.filter(order=order, reporter=request.user, status__in=['open', 'in_review']).exists():
+        return JsonResponse({'error': 'Kamu sudah punya laporan aktif untuk order ini.'}, status=400)
+
+    form = ReportForm(request.POST)
+    if not form.is_valid():
+        return JsonResponse({'errors': form.errors}, status=400)
+
+    report = form.save(commit=False)
+    report.reporter = request.user
+    report.order = order
+    report.save()
+
+    order.item.is_available = False
+    order.item.save()
+
+    return JsonResponse({'id': report.id}, status=201)
+
+
+@login_required(login_url='user:login')
+def show_my_reports(request):
+    reports = Report.objects.filter(reporter=request.user).select_related('order__item')
+    context = {
+        'reports': reports,
+    }
+    return render(request, 'review/report_list.html', context)

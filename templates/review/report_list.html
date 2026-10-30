@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block meta %}
+<title>Laporan Saya | Sewalayan</title>
+{% endblock %}
+
+{% block content %}
+<section class="section">
+    <h1 class="section__title">Laporan Saya</h1>
+
+    <div class="grid">
+        {% for report in reports %}
+            <article class="card stack stack--sm">
+                <div class="row row--between">
+                    <strong>{{ report.order.item.name }}</strong>
+                    <span class="text-sm">{{ report.get_status_display }}</span>
+                </div>
+                <p>{{ report.get_reason_display }}</p>
+                <p>{{ report.description }}</p>
+                {% if report.admin_note %}
+                    <p class="text-sm"><strong>Catatan admin:</strong> {{ report.admin_note }}</p>
+                {% endif %}
+                <small class="text-sm text-muted">{{ report.created_at|date:"d M Y, H:i" }}</small>
+            </article>
+        {% empty %}
+            <p class="text-muted">Kamu belum pernah membuat laporan.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}
