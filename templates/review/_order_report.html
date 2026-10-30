@@ -1,0 +1,66 @@
+{% if user == order.buyer or user == order.item.owner %}
+<section class="section" id="order-report"
+         data-create-url="{% url 'review:create_report_ajax' order.id %}">
+    <h2 class="section__title">Laporkan Masalah</h2>
+
+    <div class="stack">
+        <details class="card stack">
+            <summary>Ada masalah dengan sewa ini?</summary>
+
+            <form id="order-report-form" class="stack">
+                {% csrf_token %}
+                <div class="stack stack--sm">
+                    <label for="order-report-reason">Alasan</label>
+                    <select class="input" id="order-report-reason" name="reason" required>
+                        <option value="damaged">Barang rusak / tidak sesuai deskripsi</option>
+                        <option value="not_returned">Barang tidak dikembalikan</option>
+                        <option value="late">Terlambat mengembalikan</option>
+                        <option value="fraud">Penipuan</option>
+                        <option value="other">Lainnya</option>
+                    </select>
+                </div>
+
+                <div class="stack stack--sm">
+                    <label for="order-report-description">Keterangan</label>
+                    <textarea class="input" id="order-report-description" name="description" rows="3" required
+                              placeholder="Jelaskan masalahnya..."></textarea>
+                </div>
+
+                <p class="text-sm text-muted">Barang akan dinonaktifkan sementara sampai admin meninjau laporan ini.</p>
+
+                <div class="row">
+                    <button type="submit" class="btn btn--primary">Kirim Laporan</button>
+                    <span id="order-report-message" class="text-sm text-muted"></span>
+                </div>
+            </form>
+        </details>
+
+        <a href="{% url 'review:my_reports' %}">Lihat laporan saya →</a>
+    </div>
+</section>
+
+<script>
+(() => {
+    const sectionEl = document.getElementById('order-report');
+    const formEl = document.getElementById('order-report-form');
+    const messageEl = document.getElementById('order-report-message');
+
+    formEl.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const response = await fetch(sectionEl.dataset.createUrl, {
+            method: 'POST',
+            body: new FormData(formEl),
+        });
+
+        if (response.ok) {
+            formEl.reset();
+            messageEl.textContent = 'Laporan terkirim. Admin akan meninjaunya.';
+        } else {
+            const data = await response.json();
+            messageEl.textContent = data.error || Object.values(data.errors).flat().join(' ');
+        }
+    });
+})();
+</script>
+{% endif %}

@@ -89,7 +89,7 @@
                 </form>
             {% else %}
                 {% if item.is_available %}
-                    <button type="button" class="btn btn--primary" onclick="alert('Fitur pengajuan sewa akan segera hadir!');">🛒 Ajukan Sewa</button>
+                    <a href="{% url 'order:create' item.id %}" class="btn btn--primary">🛒 Ajukan Sewa</a>
                 {% else %}
                     <button type="button" class="btn" disabled>Sedang Disewa</button>
                 {% endif %}
@@ -98,6 +98,7 @@
         </div>
 
     </section>
+    {% include 'review/_item_reviews.html' %}
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>

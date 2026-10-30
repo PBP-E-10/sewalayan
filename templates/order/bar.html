@@ -1,0 +1,20 @@
+<div class="row container-padding">
+    {% if mode == 'rent' %}
+        <p>Sewaan</p>
+    {% else %}
+        <a href="{% url 'order:show' %}" class="btn">Sewaan</a>
+    {% endif %}
+
+    {% if mode == 'out-rent' %}
+        <p>Disewakan</p>
+    {% else %}
+        <a href="{% url 'order:rental' %}" class="btn">Disewakan</a>
+    {% endif %}
+
+    {% if mode == 'request' %}
+        <p>Permintaan</p>
+    {% else %}
+        <a href="{% url 'order:request' %}" class="btn">Permintaan</a>
+    {% endif %}
+
+</div>
