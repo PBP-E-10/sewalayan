@@ -85,3 +85,21 @@ def accept_order(request, order_id):
         # TODO: Notify the canceled order to the user
 
     return JsonResponse({'id': order.id}, status=201)
+
+
+@require_POST
+def pay_order(request, order_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Kamu harus login dulu.'}, status=401)
+
+    order = get_object_or_404(Order, id=order_id)
+
+    if request.user != order.buyer:
+        return JsonResponse({'error': 'Halaman tidak ditemukan'}, status=404)
+    if order.status != 'accepted':
+        return JsonResponse({'error': 'Order tidak dalam status menunggu pembayaran.'}, status=400)
+
+    order.status = 'paid'
+    order.save()
+
+    return JsonResponse({'id': order.id}, status=201)

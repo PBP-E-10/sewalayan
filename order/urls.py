@@ -1,14 +1,15 @@
 from django.urls import include, path
 from order.views import create_order, show_order, show_order_details, show_rental, show_request
 
-from order.api import accept_order, get_order_json
+from order.api import accept_order, decline_order, get_order_json, pay_order
 
 app_name = 'order'
 
 api = (
     [
         path("accept/<uuid:order_id>", accept_order, name="accept"),
-        path("decline/<uuid:order_id>", accept_order, name="decline"),
+        path("decline/<uuid:order_id>", decline_order, name="decline"),
+        path("pay/<uuid:order_id>", pay_order, name="pay"),
         path("json", get_order_json, name="json"),
     ],
     "api"
