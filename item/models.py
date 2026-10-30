@@ -56,3 +56,7 @@ class Item(models.Model):
                 "Barang dengan kondisi ini tidak layak disewakan. "
                 "Periksa kembali skor Keamanan, Fungsi, dan Kebersihan."
             )
+
+    @property
+    def is_rented(self):
+        return self.orders.filter(status__in=["accepted", "paid", "picked-up"]).exists()
