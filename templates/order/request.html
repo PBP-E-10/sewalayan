@@ -5,19 +5,22 @@
 {% endblock %}
 
 {% block content %}
-<h1>Kelola Penyewaan</h1>
-
-{% include 'order/bar.html' with mode='request' %}
+<div class="row row--between">
+    <h1>Kelola Penyewaan</h1>
+    {% include 'order/bar.html' with mode='request' %}
+</div>
 
 <section class="section">
     <h2 class="section__title">Permintaan Sewa</h2>
 
-    <div class="grid grid--lg">
+    <div class="grid grid--xl">
 
         {% for request in requests %}
         <article class="card stack stack--sm">
-            <h3>{{ request.item.name }}</h3>
-            <p>{{ request.status_id }}</p>
+            <div class="row row--between">
+                <h3>{{ request.item.name }}</h3>
+                <strong>{{ request.status_id }}</strong>
+            </div>
             <p>Penyewa: {{ request.buyer }}</p>
             <p>Ambil: {{ request.taken_at_fmt }}</p>
             <p>Kembali: {{ request.returned_at_fmt }}</p>

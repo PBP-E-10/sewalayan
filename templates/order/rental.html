@@ -5,9 +5,10 @@
 {% endblock %}
 
 {% block content %}
-<h1>Kelola Penyewaan</h1>
-
-{% include 'order/bar.html' with mode='out-rent' %}
+<div class="row row--between">
+    <h1>Kelola Penyewaan</h1>
+    {% include 'order/bar.html' with mode='out-rent' %}
+</div>
 
 <section class="section">
     <h2 class="section__title">Disewakan</h2>
