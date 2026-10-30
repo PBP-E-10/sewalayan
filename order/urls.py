@@ -10,7 +10,7 @@ api = (
         path("accept/<uuid:order_id>", accept_order, name="accept"),
         path("decline/<uuid:order_id>", decline_order, name="decline"),
         path("pay/<uuid:order_id>", pay_order, name="pay"),
-        path("pick-up/<uuid:order_id>", pick_up_order, name="pay"),
+        path("pick-up/<uuid:order_id>", pick_up_order, name="pick-up"),
         path("json", get_order_json, name="json"),
     ],
     "api"
