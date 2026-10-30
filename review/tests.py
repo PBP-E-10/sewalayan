@@ -32,7 +32,7 @@ class ReviewTest(TestCase):
     def buat_order(self, status, buyer=None):
         return Order.objects.create(
             item=self.item, buyer=buyer or self.penyewa, status=status,
-            purchase_price=50000, returned_at=timezone.now() + timedelta(days=1),
+            purchase_price=50000, taken_at=timezone.now(), returned_at=timezone.now() + timedelta(days=1),
         )
 
     def login(self, user):
@@ -57,8 +57,8 @@ class ReviewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'review/review_list.html')
 
-    def test_halaman_edit_wajib_login(self):
-        response = self.client.get(reverse('review:edit', args=[self.review.id]))
+    def test_halaman_ulasan_wajib_login(self):
+        response = self.client.get(reverse('review:order_review', args=[self.order_selesai.id]))
         self.assertEqual(response.status_code, 302)
 
     def test_halaman_ulasan_per_barang(self):
@@ -70,15 +70,15 @@ class ReviewTest(TestCase):
         response = self.client.get(reverse('review:item_reviews', args=[9999]))
         self.assertEqual(response.status_code, 404)
 
-    def test_form_ulasan_muncul_di_detail_order_selesai(self):
+    def test_tombol_tulis_ulasan_muncul_kalau_order_selesai(self):
         self.login(self.penyewa)
         response = self.client.get(reverse('order:detail', args=[self.order_selesai.id]))
-        self.assertContains(response, 'order-review-form')
+        self.assertContains(response, 'Tulis Ulasan')
 
-    def test_form_ulasan_tidak_muncul_kalau_order_belum_selesai(self):
+    def test_tombol_tulis_ulasan_tidak_muncul_kalau_belum_selesai(self):
         self.login(self.penyewa)
         response = self.client.get(reverse('order:detail', args=[self.order_baru.id]))
-        self.assertNotContains(response, 'order-review-form')
+        self.assertNotContains(response, 'Tulis Ulasan')
         self.assertContains(response, 'setelah sewa selesai')
 
     # ---------- JSON ----------
@@ -95,57 +95,49 @@ class ReviewTest(TestCase):
         url = reverse('review:show_json') + '?item=9999'
         self.assertEqual(len(self.client.get(url).json()), 0)
 
-    # ---------- AJAX create ----------
-    def test_create_ajax_berhasil(self):
+    # ---------- Tulis & edit (satu halaman) ----------
+    def test_tulis_ulasan_berhasil(self):
         self.login(self.penyewa)
-        url = reverse('review:create_ajax', args=[self.order_selesai.id])
+        url = reverse('review:order_review', args=[self.order_selesai.id])
         response = self.client.post(url, {'rating': 4, 'comment': 'Oke'})
-        self.assertEqual(response.status_code, 201)
-        review = Review.objects.get(pk=response.json()['id'])
+        self.assertRedirects(response, reverse('order:detail', args=[self.order_selesai.id]))
+        review = Review.objects.get(order=self.order_selesai)
         self.assertEqual(review.reviewer, self.penyewa)
-        self.assertEqual(review.order, self.order_selesai)
+        self.assertEqual(review.rating, 4)
 
-    def test_create_ajax_tanpa_login_ditolak(self):
-        url = reverse('review:create_ajax', args=[self.order_selesai.id])
-        response = self.client.post(url, {'rating': 4})
-        self.assertEqual(response.status_code, 401)
-
-    def test_create_ajax_order_belum_selesai_ditolak(self):
+    def test_halaman_sama_jadi_mode_edit_kalau_sudah_diulas(self):
         self.login(self.penyewa)
-        url = reverse('review:create_ajax', args=[self.order_baru.id])
-        response = self.client.post(url, {'rating': 4})
-        self.assertEqual(response.status_code, 400)
+        url = reverse('review:order_review', args=[self.order_lama.id])
+        response = self.client.get(url)
+        self.assertContains(response, 'Edit Ulasan')
+        self.assertContains(response, 'Bagus')
 
-    def test_create_ajax_bukan_penyewa_ditolak(self):
-        self.login(self.pemilik)
-        url = reverse('review:create_ajax', args=[self.order_selesai.id])
-        response = self.client.post(url, {'rating': 4})
-        self.assertEqual(response.status_code, 403)
-
-    def test_create_ajax_order_sudah_diulas_ditolak(self):
-        self.login(self.penyewa)
-        url = reverse('review:create_ajax', args=[self.order_lama.id])
-        response = self.client.post(url, {'rating': 4})
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(Review.objects.filter(order=self.order_lama).count(), 1)
-
-    def test_create_ajax_rating_salah_ditolak(self):
-        self.login(self.penyewa)
-        url = reverse('review:create_ajax', args=[self.order_selesai.id])
-        response = self.client.post(url, {'rating': 9})
-        self.assertEqual(response.status_code, 400)
-
-    # ---------- Edit & Delete ----------
-    def test_edit_review_sendiri(self):
-        self.login(self.penyewa)
-        self.client.post(reverse('review:edit', args=[self.review.id]), {'rating': 2, 'comment': 'Diubah'})
+        self.client.post(url, {'rating': 2, 'comment': 'Diubah'})
         self.review.refresh_from_db()
         self.assertEqual(self.review.comment, 'Diubah')
+        self.assertEqual(Review.objects.filter(order=self.order_lama).count(), 1)
 
-    def test_tidak_bisa_edit_review_orang_lain(self):
+    def test_order_belum_selesai_tidak_bisa_diulas(self):
+        self.login(self.penyewa)
+        url = reverse('review:order_review', args=[self.order_baru.id])
+        response = self.client.post(url, {'rating': 4})
+        self.assertRedirects(response, reverse('order:detail', args=[self.order_baru.id]))
+        self.assertFalse(Review.objects.filter(order=self.order_baru).exists())
+
+    def test_bukan_penyewa_tidak_bisa_mengulas(self):
         self.login(self.pemilik)
-        response = self.client.get(reverse('review:edit', args=[self.review.id]))
-        self.assertEqual(response.status_code, 404)
+        url = reverse('review:order_review', args=[self.order_selesai.id])
+        self.assertEqual(self.client.get(url).status_code, 404)
+        self.assertEqual(self.client.get(reverse('review:order_review', args=[self.order_lama.id])).status_code, 404)
+
+    def test_rating_salah_ditolak(self):
+        self.login(self.penyewa)
+        url = reverse('review:order_review', args=[self.order_selesai.id])
+        response = self.client.post(url, {'rating': 9})
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Review.objects.filter(order=self.order_selesai).exists())
+
+    # ---------- Delete ----------
 
     def test_delete_ajax_review_sendiri(self):
         self.login(self.penyewa)
@@ -175,7 +167,7 @@ class ReportTest(TestCase):
         )
         self.order = Order.objects.create(
             item=self.item, buyer=self.penyewa, status='picked-up',
-            purchase_price=50000, returned_at=timezone.now() + timedelta(days=1),
+            purchase_price=50000, taken_at=timezone.now(), returned_at=timezone.now() + timedelta(days=1),
         )
         self.url = reverse('review:create_report_ajax', args=[self.order.id])
         self.data = {'reason': 'damaged', 'description': 'Lensanya retak'}
@@ -241,4 +233,5 @@ class ReportTest(TestCase):
         self.assertContains(self.client.get(reverse('order:detail', args=[self.order.id])), 'order-report-form')
         self.client.logout()
         self.login(self.orang_lain)
-        self.assertNotContains(self.client.get(reverse('order:detail', args=[self.order.id])), 'order-report-form')
+        response = self.client.get(reverse('order:detail', args=[self.order.id]))
+        self.assertEqual(response.status_code, 404)

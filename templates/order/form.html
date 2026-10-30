@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block meta %}
+<title>Buat Order</title>
+{% endblock %}
+
+{% block content %}
+<div class="container container--narrow">
+    <section class="section stack stack--lg">
+        <h1 class="section__title">Form Penyewaan Barang</h1>
+
+        <div class="card">
+            <form method="POST" class="stack">
+                {% csrf_token %}
+
+            <h2>Informasi Barang</h2>
+
+            <div class="grid">
+                <!-- GAMBAR -->
+                <div class="card">
+                    {% if item.image %}
+                        <img src="{{ item.image.url }}" alt="{{ item.name }}">
+                    {% else %}
+                        <p>Tidak ada gambar</p>
+                    {% endif %}
+                </div>
+
+                <!-- RINCIAN -->
+                <div class="card stack stack--sm">
+                    <h3>Rincian Barang</h3>
+                    <div class="row row--between">
+                        <span class="text-muted">Harga sewa</span>
+                        <strong>Rp{{ item.price_per_day|floatformat:"0g" }} / hari</strong>
+                    </div>
+                    <div class="row row--between">
+                        <span class="text-muted">Kategori</span>
+                        <strong>{{ item.category.name|default:"Tanpa Kategori" }}</strong>
+                    </div>
+                    <strong>Deskripsi</strong>
+                    <div class="prose">{{ item.description|linebreaksbr }}</div>
+                </div>
+            </div>
+
+            {% for error in form.non_field_errors %}
+                <p class="text-danger">{{ error }}</p>
+            {% endfor %}
+
+            
+            {% for field in form %}
+                <div class="stack stack--sm">
+                    <label for="{{ field.id_for_label }}"><strong>{{ field.label }}</strong></label>
+                    <div class="row">
+                        {{ field }}
+                    </div>
+                    {% for error in field.errors %}
+                        <p class="text-sm text-danger">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+
+
+            <!-- Tombol -->
+            <div class="row row--between">
+                <button type="submit" class="btn btn--primary">Ajukan Sewa</button>
+                <a href="{% url 'item:list' %}" class="btn">Batal</a>
+            </div>
+
+            </form>
+        </div>
+
+    </section>
+</div>
+{% endblock %}

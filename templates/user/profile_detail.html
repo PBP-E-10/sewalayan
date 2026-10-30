@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container container--narrow">
+  <div class="card stack">
+    <h2>{{ profile.user.username }}</h2>
+    {% if profile.location %}
+      <p class="text-sm text-muted">{{ profile.location }}</p>
+    {% endif %}
+    <p>{% if profile.bio %}{{ profile.bio }}{% else %}Belum ada bio.{% endif %}</p>
+    {% if is_owner %}
+      {% if profile.phone_number %}
+        <p class="text-sm">Telepon: {{ profile.phone_number }}</p>
+      {% endif %}
+      <a class="btn btn--primary" href="{% url 'user:profile_edit' %}">Ubah profil</a>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

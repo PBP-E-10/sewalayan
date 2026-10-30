@@ -5,7 +5,31 @@
 {% endblock %}
 
 {% block content %}
-<h1 class="section__title">{{ order.item.name }}</h1>
+<section class="section">
+    <h1 class="section__title">Detail Sewaan {{ order.item.name }}</h1>
+    <div class="grid grid--lg">
+        <article class="card stack stack--sm">
+            <h3>Informasi Barang</h3>
+            <p>Disewakan seharga <strong>Rp{{ order.purchase_price|floatformat:'0g' }}/hari</strong> oleh {{ order.item.owner }}</p>
+            <p>Ambil pada: {{ order.taken_at_fmt }}</p>
+            <p>Kembalikan pada: {{ order.returned_at_fmt }}</p>
+            <div class="row">
+            <a href="{% url 'item:detail' order.item.id %}" class="btn btn--primary">Lihat barang</a>
+            </div>
+        </article>
+        <div class="card stack stack--sm">
+            <h3>Status Penyewaan</h3>
+            <p>{{ order.status_details }}</p>
+            <!-- TODO: tambah fungsionalitas berdasarkan status -->
+            <!-- Requested: none -->
+            <!-- Accepted: tambah tombol dan halaman pembayaran -->
+            <!-- Paid: tambah peta untuk ditampilkan -->
+            <!-- Picked-up: none -->
+            <!-- Finished: suruh review jika belum -->
+        </div>
+
+    </div>
+</section>
 
 {% include 'review/_order_review.html' %}
 {% include 'review/_order_report.html' %}
