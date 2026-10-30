@@ -384,3 +384,82 @@ video {
     border-radius: var(--radius);
     z-index: 1;
 }
+
+/* =========================================================
+   ITEM CARD
+   ========================================================= */
+
+/*  Kartu barang  */
+.card.item-card {
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+        border-color: var(--muted);
+        box-shadow: 0 8px 24px rgba(51, 44, 30, 0.12);
+    }
+}
+
+.item-card__media {
+    display: block;
+}
+
+.item-card__image {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    border-radius: 0;
+    object-fit: cover;
+}
+
+.item-card__image--empty {
+    display: grid;
+    place-items: center;
+    background: var(--surface);
+    color: var(--muted);
+    font-size: var(--text-sm);
+}
+
+.item-card__body {
+    flex: 1;
+    padding: var(--space-3) var(--space-4) var(--space-4);
+}
+
+.item-card__title {
+    margin-bottom: 0;
+}
+
+.card .item-card__desc {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: var(--text-sm);
+}
+
+.item-card__footer {
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border);
+}
+
+/* Badge kondisi (Grade A-D) */
+.badge {
+    display: inline-block;
+    padding: 0.125rem var(--space-2);
+    border: 1px solid var(--muted);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.badge--a { color: var(--success); border-color: var(--success); }
+.badge--b { color: #6B7F2A; border-color: #6B7F2A; }
+.badge--c { color: #9A6B00; border-color: #9A6B00; }
+.badge--d { color: var(--danger); border-color: var(--danger); }

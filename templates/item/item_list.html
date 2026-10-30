@@ -6,6 +6,7 @@
 {% endblock %}
 
 {% block content %}
+
 <div class="container container-padding">
     <section class="section stack stack--lg">
 
@@ -118,28 +119,36 @@
         return number.toLocaleString('id-ID', { maximumFractionDigits: 0 });
     }
 
+    // "Grade A" -> "a" (dipakai untuk warna badge); selain A-D dianggap netral
+    function gradeClass(grade) {
+        const letter = String(grade || '').trim().slice(-1).toLowerCase();
+        return ['a', 'b', 'c', 'd'].includes(letter) ? `badge--${letter}` : '';
+    }
+
     function buildItemCardElement(item) {
         const fields = item.fields;
         const detailUrl = DETAIL_URL_TEMPLATE.replace('/0/', `/${encodeURIComponent(item.pk)}/`);
         const article = document.createElement('article');
-        article.className = 'card stack stack--sm';
+        article.className = 'card item-card';
 
         const imageHtml = fields.image
-            ? `<img src="${escapeHtml(fields.image)}" alt="Foto ${escapeHtml(fields.name)}" class="item-card__image">`
-            : '';
+            ? `<img src="${escapeHtml(fields.image)}" alt="Foto ${escapeHtml(fields.name)}" class="item-card__image" loading="lazy">`
+            : `<div class="item-card__image item-card__image--empty">Foto belum tersedia</div>`;
 
         article.innerHTML = `
-            ${imageHtml}
-            <div class="row row--between">
-                <span class="text-sm text-muted">${escapeHtml(fields.category_name || 'Umum')}</span>
-                <strong class="text-sm">${escapeHtml(fields.condition_grade)}</strong>
-            </div>
-            <h3>${escapeHtml(fields.name)}</h3>
-            <p>${escapeHtml(fields.description)}</p>
-            <p class="text-sm">📍 ${escapeHtml(fields.location || 'Lokasi tidak diatur')}</p>
-            <div class="row row--between mt-auto">
-                <strong class="text-lg">Rp${formatRupiah(fields.price_per_day)} <span class="text-sm text-muted">/hari</span></strong>
-                <a href="${escapeHtml(detailUrl)}" class="btn btn--primary">Lihat Detail</a>
+            <a href="${escapeHtml(detailUrl)}" class="item-card__media" tabindex="-1" aria-hidden="true">${imageHtml}</a>
+            <div class="item-card__body stack stack--sm">
+                <div class="row row--between">
+                    <span class="text-sm text-muted">${escapeHtml(fields.category_name || 'Umum')}</span>
+                    <span class="badge ${gradeClass(fields.condition_grade)}">${escapeHtml(fields.condition_grade)}</span>
+                </div>
+                <h3 class="item-card__title">${escapeHtml(fields.name)}</h3>
+                <p class="item-card__desc">${escapeHtml(fields.description)}</p>
+                <p class="text-sm">📍 ${escapeHtml(fields.location || 'Lokasi tidak diatur')}</p>
+                <div class="row row--between mt-auto item-card__footer">
+                    <strong class="text-lg">Rp${formatRupiah(fields.price_per_day)} <span class="text-sm text-muted">/hari</span></strong>
+                    <a href="${escapeHtml(detailUrl)}" class="btn btn--primary">Lihat detail</a>
+                </div>
             </div>
         `;
         return article;
