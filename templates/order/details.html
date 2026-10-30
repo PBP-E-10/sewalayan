@@ -25,6 +25,7 @@
         <div class="card stack stack--sm">
             <h3>Status Penyewaan</h3>
             <p>{{ order.status_details }}</p>
+            <div id="map" class="map-box"></div>
             {% if order.status == 'accepted' %}
             <button 
                 type="button" 
@@ -33,13 +34,19 @@
                 Bayar
             </button>
             {% elif order.status == 'paid' %}
-                <div id="map" class="map-box"></div>
+                <button 
+                    type="button" 
+                    class="btn btn--primary" 
+                    onclick="pickUpOrder('{{ order.id }}')">
+                    Barang sudah diambil?
+                </button>
             {% endif %}
         </div>
 
     </div>
 </section>
 
+{% if order.status == 'paid' or order.status == 'picked-up' %}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
     {% if order.item.latitude is not None and order.item.longitude is not None %}
@@ -54,7 +61,6 @@
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         }).addTo(map);
 
-        // Popup lewat DOM + textContent, bukan string HTML (aman dari XSS)
         const popup = document.createElement('div');
         const title = document.createElement('b');
         title.textContent = "{{ order.item.name|escapejs }}";
@@ -65,7 +71,10 @@
         L.marker([lat, lon]).addTo(map).bindPopup(popup).openPopup();
     })();
     {% endif %}
+</script>
+{% endif %}
 
+<script>
     function calculateTotalPrice(priceString, takenAtIso, returnedAtIso) {
         const cleanPriceString = String(priceString).replace(',', '.');
         const dailyPrice = Number(cleanPriceString);
@@ -118,7 +127,6 @@
             });
 
             if (response.ok === true) {
-                // Payment successful - reload page or refresh list
                 window.location.reload();
             } else {
                 alert("Gagal melakukan pembayaran.");
@@ -126,6 +134,27 @@
         } catch (error) {
             console.error("Error processing payment:", error);
             alert("Terjadi kesalahan sistem saat mencoba membayar.");
+        }
+    }
+
+    async function pickUpOrder() {
+        try {
+            const response = await fetch("{% url 'order:api:pick-up' order.id %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                }
+            });
+
+            if (response.ok === true) {
+                window.location.reload();
+            } else {
+                alert("Gagal menandakan pick-up.");
+            }
+        } catch (error) {
+            console.error("Error processing pickup", error);
+            alert("Terjadi kesalahan sistem.");
         }
     }
 </script>
