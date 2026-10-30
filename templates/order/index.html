@@ -191,6 +191,10 @@
         const article = document.createElement("article");
         article.className = "card stack stack--sm";
 
+        const detailButtonHtml = title == 'Permintaan' 
+            ? `` 
+            : `<a href="${escapeHtml(detailUrl)}" class="btn btn--primary">Detail</a>`
+
         article.innerHTML = `
             <div class="row row--between">
                 <h3>${escapeHtml(fields.item_name)}</h3>
@@ -208,7 +212,7 @@
                 <div class="row">
                     ${acceptButtonHtml}
                     ${declineButtonHtml}
-                    <a href="${escapeHtml(detailUrl)}" class="btn btn--primary">Detail</a>
+                    ${detailButtonHtml}
                 </div>
             </div>
         `;
