@@ -27,7 +27,8 @@ class Order(models.Model):
 
     status = models.CharField(choices=STATUS_CHOICES, default='paid')
     purchase_price = models.DecimalField(max_digits=10, decimal_places=2)
-    taken_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    taken_at = models.DateTimeField(blank=False, null=False)
     returned_at = models.DateTimeField(blank=False, null=False)
 
     @property
