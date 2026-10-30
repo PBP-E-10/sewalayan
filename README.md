@@ -41,4 +41,18 @@ Admin bertugas mengelola data platform, memantau dan menangani laporan pengguna,
 ## Public API yang digunakan
 - [OpenStreepMap](https://www.openstreetmap.org)
 
+## Figma
+- https://www.figma.com/design/qP4DU0WQfFvmYW4L7eyNNU/SEWALAYAN?node-id=0-1&t=NKvd9ApUaYtlimgf-1
+
+## AI DISCLOSURE
+- Modul User and Profile (Asmiranda Ghina W - 2506656482)
+Alat yang digunakan: Claude
+
+Bentuk Penggunaan:
+1. Memahami konsep untuk autentikasi (models, viewvs, urls, forms, templates), relasi OneToOneField antara User dan Profile, dan keamanan (login/logout).
+2. Membantu menyusun logika kode dan beberapa kode modul User & Profile.
+3. Membantu membaca dan memperbaiki error pada kode maupun permasalahan di Git. 
+
+
+
 
