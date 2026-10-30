@@ -53,7 +53,6 @@ def decline_order(request, order_id):
         return JsonResponse({'error': 'Order tidak dalam status pengajuan.'}, status=400)
 
     order.delete()
-    # TODO: Notify the canceled order to the user
 
     return JsonResponse({'id': order.id}, status=201)
 
@@ -82,7 +81,6 @@ def accept_order(request, order_id):
 
     for order in other_orders:
         order.delete()
-        # TODO: Notify the canceled order to the user
 
     return JsonResponse({'id': order.id}, status=201)
 
@@ -121,3 +119,26 @@ def pick_up_order(request, order_id):
     order.save()
 
     return JsonResponse({'id': order.id}, status=201)
+
+
+@require_POST
+def finish_order(request, order_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Kamu harus login dulu.'}, status=401)
+
+    order = get_object_or_404(Order, id=order_id)
+
+    if request.user != order.item.owner:
+        return JsonResponse({'error': 'Halaman tidak ditemukan'}, status=404)
+    if order.status != 'picked-up':
+        return JsonResponse({'error': 'Order tidak sedang dipakai.'}, status=400)
+
+    order.status = 'finished'
+    order.save()
+
+    item = order.item
+    item.is_available = True
+    item.save()
+
+    return JsonResponse({'id': order.id}, status=201)
+
