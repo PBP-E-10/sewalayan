@@ -2,7 +2,8 @@ from decimal import Decimal
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APIClient, APITestCase
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APITestCase
 
 from .grading import NOT_ELIGIBLE_GRADE
 from .models import Category, Item
@@ -18,6 +19,9 @@ class ItemAPITest(APITestCase):
             username="other_user",
             password="test-password-123",
         )
+        self.owner_token = Token.objects.create(user=self.owner)
+        self.other_token = Token.objects.create(user=self.other_user)
+
         self.category = Category.objects.create(
             name="Elektronik",
             slug="elektronik",
@@ -54,6 +58,7 @@ class ItemAPITest(APITestCase):
         )
         self.list_url = reverse("item_api:item-list")
         self.detail_url = reverse("item_api:item-detail", args=[self.item.id])
+        self.token_url = reverse("api_token_auth")
         self.payload = {
             "category": self.category.id,
             "name": "Speaker Portable",
@@ -67,6 +72,18 @@ class ItemAPITest(APITestCase):
             "is_available": True,
             "location": "Jakarta Selatan",
         }
+
+    def test_obtain_auth_token_endpoint(self):
+        response = self.client.post(
+            self.token_url,
+            {
+                "username": "owner_user",
+                "password": "test-password-123",
+            },
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["token"], self.owner_token.key)
 
     def test_public_list_excludes_ineligible_and_filters_search(self):
         response = self.client.get(self.list_url)
@@ -94,24 +111,25 @@ class ItemAPITest(APITestCase):
         missing_resp = self.client.get(missing_url)
         self.assertEqual(missing_resp.status_code, status.HTTP_404_NOT_FOUND)
 
-    def test_guest_cannot_create_update_or_delete(self):
+    def test_guest_without_token_cannot_create_update_or_delete(self):
+        self.client.credentials()
         initial_count = Item.objects.count()
         self.assertEqual(
             self.client.post(self.list_url, self.payload, format="json").status_code,
-            status.HTTP_403_FORBIDDEN,
+            status.HTTP_401_UNAUTHORIZED,
         )
         self.assertEqual(
             self.client.patch(self.detail_url, {"name": "Ubah"}, format="json").status_code,
-            status.HTTP_403_FORBIDDEN,
+            status.HTTP_401_UNAUTHORIZED,
         )
         self.assertEqual(
             self.client.delete(self.detail_url).status_code,
-            status.HTTP_403_FORBIDDEN,
+            status.HTTP_401_UNAUTHORIZED,
         )
         self.assertEqual(Item.objects.count(), initial_count)
 
     def test_non_owner_cannot_patch_or_delete_other_user_item(self):
-        self.client.force_authenticate(user=self.other_user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.other_token.key}")
         self.assertEqual(
             self.client.patch(self.detail_url, {"name": "Dihack"}, format="json").status_code,
             status.HTTP_403_FORBIDDEN,
@@ -123,8 +141,8 @@ class ItemAPITest(APITestCase):
         self.item.refresh_from_db()
         self.assertEqual(self.item.name, "Kamera DSLR")
 
-    def test_owner_can_create_patch_and_delete_item(self):
-        self.client.force_authenticate(user=self.owner)
+    def test_owner_can_create_patch_and_delete_item_with_token(self):
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.owner_token.key}")
 
         create_resp = self.client.post(self.list_url, self.payload, format="json")
         self.assertEqual(create_resp.status_code, status.HTTP_201_CREATED)
@@ -146,7 +164,7 @@ class ItemAPITest(APITestCase):
         self.assertFalse(Item.objects.filter(pk=created_id).exists())
 
     def test_validation_rejects_invalid_price_and_ineligible_score(self):
-        self.client.force_authenticate(user=self.owner)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.owner_token.key}")
 
         bad_price = self.client.post(
             self.list_url,
@@ -164,17 +182,6 @@ class ItemAPITest(APITestCase):
         self.assertEqual(ineligible.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_wrong_http_method_returns_405(self):
-        self.client.force_authenticate(user=self.owner)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.owner_token.key}")
         resp = self.client.delete(self.list_url)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
-
-    def test_session_write_without_csrf_is_rejected(self):
-        csrf_client = APIClient(enforce_csrf_checks=True)
-        logged_in = csrf_client.login(
-            username="owner_user",
-            password="test-password-123",
-        )
-        self.assertTrue(logged_in)
-
-        resp = csrf_client.post(self.list_url, self.payload, format="json")
-        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)

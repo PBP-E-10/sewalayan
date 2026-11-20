@@ -1,20 +1,20 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import status
-from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.response import Response
 
 from .grading import NOT_ELIGIBLE_GRADE
 from .models import Item
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly
 from .serializers import ItemSerializer
 from .views import _has_unfinished_orders, _parse_decimal, geocode_address
 
 
 @api_view(["GET", "HEAD", "POST"])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsOwnerOrReadOnly])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticatedOrReadOnly])
 def item_list(request):
     if request.method in ("GET", "HEAD"):
         queryset = (
@@ -59,7 +59,7 @@ def item_list(request):
 
 
 @api_view(["GET", "HEAD", "PUT", "PATCH", "DELETE"])
-@authentication_classes([SessionAuthentication])
+@authentication_classes([TokenAuthentication])
 @permission_classes([IsOwnerOrReadOnly])
 def item_detail(request, item_id):
     item = get_object_or_404(Item.objects.select_related("owner", "category"), pk=item_id)
@@ -68,12 +68,13 @@ def item_detail(request, item_id):
         serializer = ItemSerializer(item, context={"request": request})
         return Response(serializer.data)
 
+    if not (item.owner == request.user or request.user.is_superuser):
+        return Response(
+            {"detail": IsOwnerOrReadOnly.message},
+            status=status.HTTP_403_FORBIDDEN,
+        )
+
     if request.method == "DELETE":
-        if not (item.owner == request.user or request.user.is_superuser):
-            return Response(
-                {"detail": IsOwnerOrReadOnly.message},
-                status=status.HTTP_403_FORBIDDEN,
-            )
         if _has_unfinished_orders(item):
             return Response(
                 {"detail": "Barang tidak bisa dihapus karena masih ada penyewaan yang belum selesai."},
@@ -81,12 +82,6 @@ def item_detail(request, item_id):
             )
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
-
-    if not (item.owner == request.user or request.user.is_superuser):
-        return Response(
-            {"detail": IsOwnerOrReadOnly.message},
-            status=status.HTTP_403_FORBIDDEN,
-        )
 
     old_location = item.location
     serializer = ItemSerializer(
