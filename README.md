@@ -40,6 +40,25 @@ Admin bertugas mengelola data platform, memantau dan menangani laporan pengguna,
 
 
 ## AI DISCLOSURE 
+- Modul Item (Jordan Manaksak Hutahaean - 2506532580)
+Alat yang digunakan: Claude Anthropic
+
+Bentuk Penggunaan:
+1. Pembelajaran & penjelasan konsep: memahami struktur direktori Django, implementasi Django ORM, pengelolaan migrations, serta penanganan merge conflict dan sinkronisasi branch di Git.
+2. Menyusun pseudocode: Membantu merancang struktur modul item (models, interactive list elements, form entry templates) serta tata letak antarmuka web.
+3. Debugging: Membantu membaca dan memperbaiki error pada file migrasi, penanganan konflik saat melakukan git pull dari main, serta mengatasi kendala pada terminal Git.
+4. Pengecekan: Memeriksa struktur kode sebelum melakukan push, memastikan keselarasan antar branch, dan memvalidasi alur kerja lokal dengan runserver.
+
+Peran saya:
+1. Menentukan dan merancang logika serta alur fitur pada modul item di proyek sewalayan.
+
+Menerapkan kode ke proyek, mengelola version control menggunakan Git, serta melakukan merge dan sinkronisasi dengan branch anggota kelompok lain.
+
+Menguji fungsionalitas modul secara manual melalui server lokal (runserver) serta memastikan seluruh perubahan berjalan lancar tanpa kendala.
+
+Memahami dan dapat menjelaskan setiap bagian kode serta perintah Git yang digunakan selama proses pengembangan.
+
+
 - Modul Review and Report (Lavida Yuthiana Faizah - 2506605941)
 Alat yang digunakan: Claude Anthropic
 
