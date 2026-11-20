@@ -6,3 +6,4 @@ whitenoise
 pillow
 requests
 djangorestframework~=3.18.3
+

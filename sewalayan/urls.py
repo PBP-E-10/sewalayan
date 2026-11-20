@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from rest_framework.authtoken.views import obtain_auth_token
 
 from sewalayan.views import design_page, landing_page
 
@@ -32,6 +33,11 @@ urlpatterns = [
     path('user/', include('user.urls')),
     path('user/api/', include('user.api_urls')),
     path('user/', include('user.urls')),
+]
+
+urlpatterns += [
+    path('api/v1/', include('item.api_urls')),
+    path('api/v1/auth/token/', obtain_auth_token, name='api_token_auth'),
 ]
 
 if settings.DEBUG:
