@@ -27,6 +27,7 @@ urlpatterns = [
     path('design', design_page),
     path('admin/', admin.site.urls),
     path('item/', include('item.urls')),
+    path('order/api/new/', include('order.api_urls')), # TODO
     path('order/', include('order.urls')),
     path('review/api/', include('review.api_urls')),
     path('review/', include('review.urls')),

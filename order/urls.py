@@ -5,7 +5,7 @@ from order.api import accept_order, decline_order, finish_order, get_order_json,
 
 app_name = 'order'
 
-api = (
+old_api = (
     [
         path("accept/<uuid:order_id>", accept_order, name="accept"),
         path("decline/<uuid:order_id>", decline_order, name="decline"),
@@ -19,7 +19,7 @@ api = (
 
 urlpatterns = [
     path('', show_order, name="show"),
-    path('api/', include(api)),
+    path('api/', include(old_api)),
     path('rental', show_rental, name="rental"),
     path('request', show_request, name="request"),
     path('create/<int:item_id>', create_order, name="create"),
